@@ -44,11 +44,11 @@ You have two options to get the code:
 
 1. Navigate to the following directory in your local project folder:
    ```
-   AI-for-Astronomy-main\AI-for-Astronomy-main\code\Big_Data_Conference\Inference
+   AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Inference
    ```
 2. Locate the `inference.py` file in this directory.
 3. Open `inference.py` and update the directory paths in the following lines:
-   - **Line 3**: Update the path to point to the "Big_Data_Conference" folder.
+   - **Line 3**: Update the path to point to the "Anomaly Detection" folder.
    - **Line 65**: Update the path as needed for your system.
    - **Line 69**: Update the path to point to the `Inference.pt` dataset.
 
@@ -56,7 +56,7 @@ You have two options to get the code:
 
 1. Open your terminal and navigate to the directory containing `inference.py`:
    ```sh
-   cd C:\...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Big_Data_Conference\Inference
+   cd C:\...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Inference
    ```
 2. Run the inference script using the following command:
    ```sh
