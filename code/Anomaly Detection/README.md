@@ -4,6 +4,35 @@
 AstroMAE is a novel approach for redshift prediction, designed to address the limitations of traditional machine learning methods that rely heavily on labeled data and feature extraction. Redshift is a key concept in astronomy, referring to the stretching of light from distant galaxies as they move away from us due to the expansion of the universe. By measuring redshift, astronomers can determine the distance and velocity of celestial objects, providing valuable insights into the structure and evolution of the cosmos.
 
 Utilizing a masked autoencoder, AstroMAE pretrains a vision transformer encoder on Sloan Digital Sky Survey (SDSS) images to capture general patterns without the need for labels. This pretrained encoder is then fine-tuned within a specialized architecture for redshift prediction, combining both global and local feature extraction. AstroMAE represents the first application of a masked autoencoder for astronomical data and outperforms other vision transformer and CNN-based models in accuracy, showcasing its potential in advancing our understanding of the cosmos.
+
+In evaluating AstroMAE, several metrics were used to compare its performance with other models: Mean Absolute Error (MAE), Mean Square Error (MSE), Bias, Precision, and R² score. These metrics provide a comprehensive assessment of the model's prediction accuracy and reliability, highlighting the effectiveness of AstroMAE in redshift prediction tasks.
+
+- **Mean Absolute Error (MAE)**: Measures the average magnitude of the errors between predicted and true values.
+  
+  \[	ext{MAE} = rac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|\]
+
+- **Mean Square Error (MSE)**: Measures the average of the squares of the errors between predicted and true values.
+  
+  \[	ext{MSE} = rac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2\]
+
+- **Bias**: Measures the average residuals between predicted and true values, normalized by the true value.
+  
+  \[	ext{Bias} = \left\langle rac{\hat{y} - y}{1 + y} 
+ight
+angle\]
+
+- **Precision**: Measures the expected scatter and is a robust measure of the spread of errors.
+  
+  \[	ext{Precision} = 1.48 	imes 	ext{median} \left( \left| rac{\hat{y} - y}{1 + y} 
+ight| 
+ight)\]
+
+- **R² score**: Evaluates how well the model predicts, with a value closer to 1 indicating better performance.
+  
+  \[R^2 = 1 - rac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - ar{y})^2}\]
+
+In these formulas, \(y\), \(\hat{y}\), and \(ar{y}\) represent the ground-truth value, predicted value, and mean of the ground-truth values, respectively, and \(n\) is the number of data samples.
+
 # AI for Astronomy Inference Step-by-Step Guide
 
 ## Overview
