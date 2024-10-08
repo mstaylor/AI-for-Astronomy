@@ -69,7 +69,7 @@ You have two options to get the code:
 
 1. Once the script completes, navigate to the following directory:
    ```
-   C:\...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Big_Data_Conference\Plots
+   C:\...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Plots
    ```
 2. Open the following files to view the results:
    - **inference.png**: This contains a visual representation of the inference results.
