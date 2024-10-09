@@ -9,27 +9,38 @@ In evaluating AstroMAE, several metrics were used to compare its performance wit
 
 - **Mean Absolute Error (MAE)**: Measures the average magnitude of the errors between predicted and true values.
   
-  \[	ext{MAE} = rac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|\]
+    $$
+    MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|
+    $$
+
 
 - **Mean Square Error (MSE)**: Measures the average of the squares of the errors between predicted and true values.
   
-  \[	ext{MSE} = rac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2\]
+    $$
+    MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+    $$
+
 
 - **Bias**: Measures the average residuals between predicted and true values, normalized by the true value.
   
-  \[	ext{Bias} = \left\langle rac{\hat{y} - y}{1 + y} 
-ight
-angle\]
+    $$
+    \text{Bias} = \left\langle \frac{\hat{y} - y}{1 + y} \right\rangle
+    $$
+
 
 - **Precision**: Measures the expected scatter and is a robust measure of the spread of errors.
   
-  \[	ext{Precision} = 1.48 	imes 	ext{median} \left( \left| rac{\hat{y} - y}{1 + y} 
-ight| 
-ight)\]
+    $$
+    \text{Precision} = 1.48 \times \text{median} \left( \left| \frac{\hat{y} - y}{1 + y} \right| \right)
+    $$
+
 
 - **R² score**: Evaluates how well the model predicts, with a value closer to 1 indicating better performance.
   
-  \[R^2 = 1 - rac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - ar{y})^2}\]
+    $$
+    R^2 = 1 - \frac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - \bar{y})^2}
+    $$
+
 
 In these formulas, \(y\), \(\hat{y}\), and \(ar{y}\) represent the ground-truth value, predicted value, and mean of the ground-truth values, respectively, and \(n\) is the number of data samples.
 
