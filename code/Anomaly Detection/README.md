@@ -9,40 +9,34 @@ In evaluating AstroMAE, several metrics were used to compare its performance wit
 
 - **Mean Absolute Error (MAE)**: Measures the average magnitude of the errors between predicted and true values.
   
-    $$
-    MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|
-    $$
-
+  $$
+  MAE = \frac{1}{n} \sum_{i=1}^{n} |z_i - \hat{z}_i|
+  $$
 
 - **Mean Square Error (MSE)**: Measures the average of the squares of the errors between predicted and true values.
   
-    $$
-    MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
-    $$
-
+$$
+MSE = \frac{1}{n} \sum_{i=1}^{n} (z_i - \hat{z}_i)^2
+$$
 
 - **Bias**: Measures the average residuals between predicted and true values, normalized by the true value.
   
-    $$
-    \text{Bias} = \left\langle \frac{\hat{y} - y}{1 + y} \right\rangle
-    $$
-
+$$
+\text{Bias} = \left\langle \frac{\hat{z} - z}{1 + z} \right\rangle
+$$
 
 - **Precision**: Measures the expected scatter and is a robust measure of the spread of errors.
   
-    $$
-    \text{Precision} = 1.48 \times \text{median} \left( \left| \frac{\hat{y} - y}{1 + y} \right| \right)
-    $$
-
+$$
+\text{Precision} = 1.48 \times \text{median} \left( \left| \frac{\hat{z} - z}{1 + z} \right| \right)
+$$
 
 - **R² score**: Evaluates how well the model predicts, with a value closer to 1 indicating better performance.
-  
-    $$
-    R^2 = 1 - \frac{\sum_{i=1}^{n} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{n} (y_i - \bar{y})^2}
-    $$
+ 
+  ![image](https://github.com/user-attachments/assets/9c1391d7-cc7c-4ee8-af7d-f0b7a5c4cdab)
 
 
-In these formulas, \(y\), \(\hat{y}\), and \(ar{y}\) represent the ground-truth value, predicted value, and mean of the ground-truth values, respectively, and \(n\) is the number of data samples.
+In these formulas, $z$, $\hat{z}$, and $\bar{z}$ represent the ground-truth value, predicted value, and mean of the ground-truth values, respectively, and $\(n\)$ is the number of data samples.
 
 # AI for Astronomy Inference Step-by-Step Guide
 
