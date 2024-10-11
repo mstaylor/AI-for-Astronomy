@@ -7,6 +7,14 @@ Utilizing a masked autoencoder, AstroMAE pretrains a vision transformer encoder 
 
 In evaluating AstroMAE, several metrics were used to compare its performance with other models: Mean Absolute Error (MAE), Mean Square Error (MSE), Bias, Precision, and R² score. These metrics provide a comprehensive assessment of the model's prediction accuracy and reliability, highlighting the effectiveness of AstroMAE in redshift prediction tasks.
 
+- **Average execution time (milliseconds) per batch**: The average time taken to process a single batch of data, measured in milliseconds. It indicates the efficiency of the model during training or inference, with lower values suggesting faster execution.
+
+- **Batch size**: The number of samples processed together in one forward or backward pass. Larger batch sizes can enhance computation efficiency and improve model performance but require more memory.
+
+- **Number of batches**: The total count of batches processed during execution. It provides insight into the workload and helps understand the total amount of data processed.
+
+- **Device**: The hardware used to run the model, which can either be `'cpu'` (central processing unit) or `'cuda'` (graphics processing unit).
+
 - **Mean Absolute Error (MAE)**: Measures the average magnitude of the errors between predicted and true values.
   
   $$
@@ -34,7 +42,6 @@ $$
 - **R² score**: Evaluates how well the model predicts, with a value closer to 1 indicating better performance.
  
   ![image](https://github.com/user-attachments/assets/9c1391d7-cc7c-4ee8-af7d-f0b7a5c4cdab)
-
 
 In these formulas, $z$, $\hat{z}$, and $\bar{z}$ represent the ground-truth value, predicted value, and mean of the ground-truth values, respectively, and $\(n\)$ is the number of data samples.
 
@@ -98,7 +105,7 @@ You have two options to get the code:
    ```
    - The script may take about one minute to complete.
    - If prompted for missing libraries, install them using `pip`. Ensure that the **timm** library version is **0.4.12**.
-
+3.
 ## Step 5: View Results
 
 1. Once the script completes, navigate to the following directory:
@@ -107,8 +114,20 @@ You have two options to get the code:
    ```
 2. Open the following files to view the results:
    - **inference.png**: This contains a visual representation of the inference results.
-   - **inference.png_Results.json**: This JSON file contains the detailed numerical results of the inference.
+   - **Results.json**: This JSON file contains the detailed numerical results of the inference.
 
+3. Setting the Device
+
+   - To run the script on either GPU or CPU, set the `--device` argument accordingly:
+
+      - For **GPU**: use `'cuda'`
+      - For **CPU**: use `'cpu'`
+
+    - The default is set to run on CPU. To change the device, modify the `--device` argument as follows:
+    
+      ```python
+      parser.add_argument('--device', type=str, default='cpu', help="Device to run the model on: 'cuda' for GPU or 'cpu' for CPU")
+      ```
 ### Troubleshooting
 
 - If you encounter issues with missing libraries, ensure you have installed all required packages by using `pip install`. The version of **timm** must be **0.4.12** to avoid compatibility issues.
