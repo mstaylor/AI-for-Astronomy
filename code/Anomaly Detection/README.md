@@ -168,5 +168,5 @@ Anomaly_Detection
 
 Don't hesitate to get in touch with us:
 
-- aww9gh@virginia.edu
-- ear3cg@virginia.edu
+- Amirreza Dolatpour Fathkouhi: aww9gh@virginia.edu
+- Kaleigh O'Hara: ear3cg@virginia.edu
