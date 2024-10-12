@@ -5,45 +5,43 @@ AstroMAE is a novel approach for redshift prediction, designed to address the li
 
 Utilizing a masked autoencoder, AstroMAE pretrains a vision transformer encoder on Sloan Digital Sky Survey (SDSS) images to capture general patterns without the need for labels. This pretrained encoder is then fine-tuned within a specialized architecture for redshift prediction, combining both global and local feature extraction. AstroMAE represents the first application of a masked autoencoder for astronomical data and outperforms other vision transformer and CNN-based models in accuracy, showcasing its potential in advancing our understanding of the cosmos.
 
-In evaluating AstroMAE, several metrics were used to compare its performance with other models: Mean Absolute Error (MAE), Mean Square Error (MSE), Bias, Precision, and R² score. These metrics provide a comprehensive assessment of the model's prediction accuracy and reliability, highlighting the effectiveness of AstroMAE in redshift prediction tasks.
+### Data Description
 
-- **Average execution time (milliseconds) per batch**: The average time taken to process a single batch of data, measured in milliseconds. It indicates the efficiency of the model during training or inference, with lower values suggesting faster execution.
+This study utilizes data from the Sloan Digital Sky Survey (SDSS), one of the most comprehensive astronomical surveys to date. SDSS is a major multi-spectral imaging and spectroscopic redshift survey, providing detailed data about millions of celestial objects. The dataset used in this experiment is derived from previous work on the AstroMAE project. Specifically, it includes 1,253 images, each with corresponding magnitude values for the five photometric bands (u, g, r, i, z) and redshift targets. Each image has a resolution of 64 × 64 pixels, which are cropped from the center to a size of 32 × 32 pixels to be fed to the model.
 
-- **Batch size**: The number of samples processed together in one forward or backward pass. Larger batch sizes can enhance computation efficiency and improve model performance but require more memory.
 
-- **Number of batches**: The total count of batches processed during execution. It provides insight into the workload and helps understand the total amount of data processed.
+<img width="998" alt="image" src="https://github.com/user-attachments/assets/1424e7b6-92bb-4b8d-a62e-b68f695e916e">
 
-- **Device**: The hardware used to run the model, which can either be `'cpu'` (central processing unit) or `'cuda'` (graphics processing unit).
 
-- **Mean Absolute Error (MAE)**: Measures the average magnitude of the errors between predicted and true values.
-  
-  $$
-  MAE = \frac{1}{n} \sum_{i=1}^{n} |z_i - \hat{z}_i|
-  $$
 
-- **Mean Square Error (MSE)**: Measures the average of the squares of the errors between predicted and true values.
-  
-$$
-MSE = \frac{1}{n} \sum_{i=1}^{n} (z_i - \hat{z}_i)^2
-$$
 
-- **Bias**: Measures the average residuals between predicted and true values, normalized by the true value.
-  
-$$
-\text{Bias} = \left\langle \frac{\hat{z} - z}{1 + z} \right\rangle
-$$
+  ## AstroMAE Evaluation Metrics
 
-- **Precision**: Measures the expected scatter and is a robust measure of the spread of errors.
-  
-$$
-\text{Precision} = 1.48 \times \text{median} \left( \left| \frac{\hat{z} - z}{1 + z} \right| \right)
-$$
+AstroMAE is evaluated using multiple metrics to assess its performance comprehensively. These metrics include Mean Absolute Error (MAE), Mean Square Error (MSE), Bias, Precision, and R² score, offering a complete view of the model's prediction accuracy and reliability, particularly for redshift prediction tasks.
 
-- **R² score**: Evaluates how well the model predicts, with a value closer to 1 indicating better performance.
- 
-  ![image](https://github.com/user-attachments/assets/9c1391d7-cc7c-4ee8-af7d-f0b7a5c4cdab)
+### Scatter Plot: Predicted vs. Spectroscopic Redshift
 
-In these formulas, $z$, $\hat{z}$, and $\bar{z}$ represent the ground-truth value, predicted value, and mean of the ground-truth values, respectively, and $\(n\)$ is the number of data samples.
+The scatter plot visualizes the relationship between predicted redshift values (y-axis) and spectroscopic redshift values (x-axis). Each point represents a data sample, with the color indicating point density—warmer colors (yellow to red) denote regions of higher density. The red dashed line represents an ideal scenario (y = x), where predicted redshifts perfectly match spectroscopic values. Closer data points to this line imply better model predictions.
+
+![image](https://github.com/user-attachments/assets/5b51baba-ebad-40d3-89c6-e2e155cca442)
+
+### Metrics Explained
+
+- **Mean Absolute Error (MAE)**: Measures the average magnitude of the errors between predicted and true values, providing insight into prediction accuracy.
+- **Mean Square Error (MSE)**: Quantifies the average of squared errors, emphasizing larger deviations to highlight significant prediction errors.
+- **Bias**: Measures the average residuals between predicted and true values, indicating any systematic over- or underestimation in predictions.
+- **Precision**: Represents the expected scatter of errors, reflecting the consistency of the model's predictions.
+- **R² Score**: Evaluates how well the model predicts compared to the mean of true values; a value closer to 1 indicates better predictive performance.
+
+### Additional Metrics
+
+- **Average Execution Time (ms) per Batch**: Reflects the model's efficiency, with lower values indicating faster batch processing.
+- **Batch Size**: Number of samples processed together in one forward or backward pass, affecting computational efficiency and memory usage.
+- **Number of Batches**: Total count of batches processed, indicating the data workload.
+- **Device**: Specifies the hardware used, such as 'cpu' or 'cuda', highlighting computational capability.
+
+These metrics provide a detailed overview of AstroMAE's performance, emphasizing its effectiveness in redshift prediction tasks.
+
 
 # AI for Astronomy Inference Step-by-Step Guide
 
@@ -137,9 +135,33 @@ You have two options to get the code:
 - Ensure that all directory paths are properly set according to your system's file structure.
 - These instructions have been tested on both Windows and Mac systems, with only minor variations.
 
-### Contact
 
-For additional support, please open an issue on the GitHub repository or reach out to the project maintainers.
+# Project Folder Structure
+
+```
+Anomaly_Detection
+├── Fine_Tune_Model
+├── Inference
+├── Plots
+├── blocks
+├── Astronomy_Overview.pptx
+├── NormalCell.py
+├── Plot_Redshift.py
+├── README.pdf
+```
+
+## Description of Each Folder and File
+
+| Folder/File              | Description                                                                                      |
+|--------------------------|--------------------------------------------------------------------------------------------------|
+| **Fine_Tune_Model**      | Contains model weights.                                                                         |
+| **Inference**            | Code and data required for running inference.                                                   |
+| **Plots**                | Generated visualizations, such as plots of model evaluation metrics and analysis results.        |
+| **blocks**               | Source code for fine-tuning.                                                                     |
+| **Astronomy_Overview.pptx**  | PowerPoint presentation summarizing the astronomy aspects of the project.                      |
+| **NormalCell.py**        | Python implementation of standard and customized multi-head self-attention mechanisms.           |
+| **Plot_Redshift.py**     | Script for generating visualizations and evaluations related to redshift analysis.               |
+| **README.pdf**           | Detailed guide providing step-by-step instructions for running inference.                        |
 
 
 ## Support
