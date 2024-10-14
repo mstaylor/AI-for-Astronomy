@@ -87,9 +87,9 @@ You have two options to get the code:
    ```
 2. Locate the `inference.py` file in this directory.
 3. Open `inference.py` and update the directory paths in the following lines:
-   - **Line 3**: Update the path to point to the "Anomaly Detection" folder.
-   - **Line 65**: Update the path as needed for your system.
-   - **Line 69**: Update the path to point to the `Inference.pt` dataset.
+   - **Line 2**: Update the path to point to the "Anomaly Detection" folder.
+   - **Line 79**: Update the path as needed for your system.
+   - **Line 84**: Update the path to point to the `Inference.pt` dataset.
 
 ## Step 4: Run the Inference Script
 
