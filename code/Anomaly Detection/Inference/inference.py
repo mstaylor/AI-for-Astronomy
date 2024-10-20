@@ -71,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--data_path', type = str, default = 'resized_inference.pt')
     parser.add_argument('--model_path', type = str, default  = prj_dir + 'Fine_Tune_Model/Mixed_Inception_z_VITAE_Base_Img_Full_New_Full.pt')
-    parser.add_argument('--device', type = str, default = 'cuda')    # To run on GPU, put cuda, and on CPU put cpu
+    parser.add_argument('--device', type = str, default = 'cpu')    # To run on GPU, put cuda, and on CPU put cpu
 
     parser.add_argument('--plot_path', type = str, default = prj_dir + 'Plots/')
     args = parser.parse_args()
