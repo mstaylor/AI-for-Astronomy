@@ -38,6 +38,9 @@ def err_calculate(prediction, z, execution_info, save_path):
     
     #All errors are stored in a json and saved in  save_path directory
     errs = {
+    'total execution time': execution_info['total_time'],
+    'throughput': execution_info['throughput_bps'],
+    'samples per second': execution_info['sample_persec'],
     'average execution time (milliseconds) per batch': execution_info['execution_time'] * 1000,
     'batch size': execution_info['batch_size'],
     'number of batches': execution_info['num_batches'],
