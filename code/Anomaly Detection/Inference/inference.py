@@ -24,9 +24,10 @@ def data_loader(data, batch_size):
 
 #Iterate over data for predicting the redshift and invoke the evaluation modules
 def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch_size):
-    
     redshift_analysis = []
-    num_batches = 0
+    total_time = 0.0   # Initialize total time for execution
+    num_batches = 0    # Initialize number of batches
+    total_data_bits = 0   # Initialize total data bits processed
     for i, data in enumerate(dataloader):
         image = data[0].to(device) #Image is permuted, cropped and moved to cuda
         magnitude = data[1].to(device) #magnitude of of channels
@@ -38,9 +39,18 @@ def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch
         
         end_time = time.time()         #Put the end time of the execution
         
+        total_time += (end_time - start_time)   # Accumulate time for this batch
+        
         redshift_analysis.append(predict_redshift.view(-1, 1))
+        
+        # Calculate the size of the image and magnitude data in bits
+        image_bits = image.element_size() * image.nelement() * 8   # Convert bytes to bits
+        magnitude_bits = magnitude.element_size() * magnitude.nelement() * 8   # Convert bytes to bits
+        total_data_bits += image_bits + magnitude_bits   # Add data bits for this batch
     
         num_batches += 1
+    
+    num_samples = num_batches * batch_size
         
     redshift_analysis = torch.cat(redshift_analysis, dim = 0)
     
@@ -48,11 +58,15 @@ def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch
     
     real_redshift = real_redshift[:num_batches * batch_size]
     
-    execution_info = {'execution_time': (end_time - start_time) / num_batches,   #Calculate the average execution time per batch
-                      'num_batches': num_batches,                                #Number of batches
-                      'batch_size': batch_size,                                  #Batch size
-                      'device': device                                           #Selected device
-                     }
+    execution_info = {
+        'total_time': total_time,
+        'execution_time': total_time / num_batches,   # Average execution time per batch
+        'num_batches': num_batches,   # Number of batches
+        'batch_size': batch_size,   # Batch size
+        'device': device,   # Selected device
+        'throughput_bps': total_data_bits / total_time   # Throughput in bits per second
+        'sample_persec': num_samples / total_time
+    }
     
     plt_rdshft.err_calculate(redshift_analysis, real_redshift, execution_info, plot_to_save_path) #invoke for calculating statistical prediction evaluation metrics 
 
