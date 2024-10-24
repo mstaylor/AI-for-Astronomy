@@ -1,6 +1,6 @@
 import sys, argparse
 
-sys.path.append('/tmp/Anomaly Detection/')  #adjust based on your system's directory
+sys.path.append('/tmp/scripts/Anomaly Detection/')  #adjust based on your system's directory
 import torch, time
 import numpy as np
 import Plot_Redshift as plt_rdshft
@@ -10,6 +10,9 @@ import boto3
 from botocore.exceptions import ClientError
 import logging
 import os
+import fmi
+from fmilib.fmi_operations import fmi_communicator
+import json
 
 
 def upload_file(file_name, bucket, object_name=None):
@@ -65,11 +68,18 @@ def data_loader(data, batch_size):
 
 
 #Iterate over data for predicting the redshift and invoke the evaluation modules
-def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch_size):
+def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch_size, rank, world_size):
     redshift_analysis = []
     total_time = 0.0  # Initialize total time for execution
     num_batches = 0  # Initialize number of batches
     total_data_bits = 0  # Initialize total data bits processed
+
+    comm = fmi_communicator(world_size, rank)
+
+    comm.hint(fmi.hints.fast)
+
+    comm.barrier()
+
     for i, data in enumerate(dataloader):
         image = data[0].to(device)  #Image is permuted, cropped and moved to cuda
         magnitude = data[1].to(device)  #magnitude of of channels
@@ -114,9 +124,25 @@ def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch
     plt_rdshft.err_calculate(redshift_analysis, real_redshift, execution_info,
                              plot_to_save_path)  #invoke for calculating statistical prediction evaluation metrics
 
-    upload_file(file_name='/tmp/Plots/Results.json',
+
+    reduce_res = comm.reduce(total_time, fmi.func(fmi.op.sum), fmi.types(fmi.datatypes.double))
+
+    if rank == 0:
+        reduce_info = {
+            'total_time': reduce_res
+        }
+
+        with open(f'{prj_dir}Plots/ResultsReduce.json', 'w', encoding='utf-8') as redInfo:
+            json.dump(reduce_info, redInfo, ensure_ascii=False, indent=4)
+
+        upload_file(file_name=f'{prj_dir}Plots/ResultsReduce.json',
+                    bucket='cosmicai',
+                    object_name=f'results/{rank}/ResultsReduce.json')
+
+
+    upload_file(file_name=f'{prj_dir}Plots/Results.json',
                 bucket='cosmicai',
-                object_name='Results.json')
+                object_name=f'results/{rank}/Results.json')
 
 
 #This is the engine module for invoking and calling various modules
@@ -124,15 +150,16 @@ def engine(args):
     data = load_data(args.data_path, args.device)
     dataloader = data_loader(data, args.batch_size)
     model = load_model(args.model_path, args.device)
-    inference(model, dataloader, data[:][2].to('cpu'), args.plot_path, device=args.device, batch_size=args.batch_size)
+    inference(model, dataloader, data[:][2].to('cpu'), args.plot_path, device=args.device, batch_size=args.batch_size,
+              rank=args.rank)
 
 
 # Pathes and other inference hyperparameters can be adjusted below
 if __name__ == '__main__':
-    prj_dir = '/tmp/Anomaly Detection/'  #adjust based on your system's directory
+    prj_dir = '/tmp/scripts/Anomaly Detection/'  #adjust based on your system's directory
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--data_path', type=str, default='resized_inference.pt')
+    parser.add_argument('--data_path', type=str, default=f'{prj_dir}Inference/resized_inference.pt')
     parser.add_argument(
         '--model_path',
         type=str,
@@ -140,9 +167,10 @@ if __name__ == '__main__':
     )
     parser.add_argument('--device', type=str, default='cpu')  # To run on GPU, put cuda, and on CPU put cpu
 
-    parser.add_argument('--plot_path', type=str, default='/tmp/Plots/')
+    parser.add_argument('--plot_path', type=str, default=f'{prj_dir}Plots/')
 
-    parser.add_argument('-rank',  type=int, **environ_or_required('RANK', required=False))
+    parser.add_argument('--rank',  type=int, **environ_or_required('RANK', required=False))
+    parser.add_argument('--world_size', type=int, **environ_or_required('WORLD_SIZE', required=False))
     args = parser.parse_args()
 
     engine(args)
