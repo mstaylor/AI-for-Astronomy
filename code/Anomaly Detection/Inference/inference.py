@@ -125,7 +125,7 @@ def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch
                              plot_to_save_path)  #invoke for calculating statistical prediction evaluation metrics
 
 
-    reduce_res = comm.reduce(total_time, fmi.func(fmi.op.sum), fmi.types(fmi.datatypes.double))
+    reduce_res = comm.reduce(total_time, 0, fmi.func(fmi.op.sum), fmi.types(fmi.datatypes.double))
 
     if rank == 0:
         reduce_info = {
@@ -151,7 +151,7 @@ def engine(args):
     dataloader = data_loader(data, args.batch_size)
     model = load_model(args.model_path, args.device)
     inference(model, dataloader, data[:][2].to('cpu'), args.plot_path, device=args.device, batch_size=args.batch_size,
-              rank=args.rank)
+              rank=args.rank, world_size=args.world_size)
 
 
 # Pathes and other inference hyperparameters can be adjusted below
