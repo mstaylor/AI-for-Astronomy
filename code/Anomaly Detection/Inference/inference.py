@@ -136,12 +136,12 @@ def inference(model, dataloader, real_redshift, plot_to_save_path, device, batch
             json.dump(reduce_info, redInfo, ensure_ascii=False, indent=4)
 
         upload_file(file_name=f'{prj_dir}Plots/ResultsReduce.json',
-                    bucket='cosmicai',
+                    bucket='cosmicai2',
                     object_name=f'results/{rank}/ResultsReduce.json')
 
 
     upload_file(file_name=f'{prj_dir}Plots/Results.json',
-                bucket='cosmicai',
+                bucket='cosmicai2',
                 object_name=f'results/{rank}/Results.json')
 
 
