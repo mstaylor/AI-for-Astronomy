@@ -1,5 +1,37 @@
-import math, json
+import math
 import numpy as np
+import torch, json
+import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde
+from sklearn.metrics import r2_score
+
+def plot_density(x, y, save_plot_path):
+    x = np.array(x)
+    y = np.array(y)
+    xy = np.vstack([x, y])
+    z = gaussian_kde(xy)(xy)
+    # Sort the points by density, so that the densest points are plotted last
+    idx = z.argsort()
+    x, y, z = x[idx], y[idx], z[idx]
+    fig, ax = plt.subplots()
+
+    scatter = ax.scatter(x, y, c=z, s=1, cmap='inferno')
+
+    # Adding a dashed line
+    ax.plot([min(min(x), min(y)), max(max(x), max(y))], [min(min(x), min(y)), max(max(x), max(y))], '--', color='red') # Change coordinates as needed
+
+    plt.xlim(min(min(x), min(y)), max(max(x), max(y)))
+    plt.ylim(min(min(x), min(y)), max(max(x), max(y)))
+    
+    plt.xlabel('spectroscopic z')
+    plt.ylabel('predicted z')
+    plt.grid(True)
+    plt.colorbar(scatter, ax=ax)
+    
+    plt.savefig(save_plot_path + '/inference.png')
+
+
+
 
 def err_calculate(prediction, z, execution_info, save_path):
     
@@ -35,13 +67,15 @@ def err_calculate(prediction, z, execution_info, save_path):
     
     #R^2 score
     r2 = r2_score(z, prediction)
-    
+     
     #All errors are stored in a json and saved in  save_path directory
     errs = {
-    'total execution time': execution_info['total_time'],
-    'throughput': execution_info['throughput_bps'],
-    'samples per second': execution_info['sample_persec'],
-    'average execution time (milliseconds) per batch': execution_info['execution_time'] * 1000,
+    'total cpu time (second)': execution_info['total_cpu_time'],
+    'total gpu time (second)': execution_info['total_gpu_time'],
+    'execution time per batch (second)': execution_info['execution_time_per_batch'],
+    'cpu memory (MB)': execution_info['total_cpu_memory'],
+    'gpu memory (MB)': execution_info['total_gpu_memory'],
+    'throughput(bps)': execution_info['throughput_bps'],
     'batch size': execution_info['batch_size'],
     'number of batches': execution_info['num_batches'],
     'device': execution_info['device'],
