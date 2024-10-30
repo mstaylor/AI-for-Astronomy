@@ -69,7 +69,7 @@ You have two options to get the code:
 1. Copy the GitHub repository URL: [UVA-MLSys/AI-for-Astronomy](https://github.com/UVA-MLSys/AI-for-Astronomy).
 2. Open your terminal and navigate to the directory where you want to save the project.
 3. Run the following command:
-   ```sh
+   ```
    git clone https://github.com/UVA-MLSys/AI-for-Astronomy.git
    ```
 4. Follow the prompts to enter your GitHub username, password, or authentication token if required.
@@ -88,7 +88,7 @@ You have two options to get the code:
 
 1. Navigate to the following directory in your local project folder:
    ```
-   ...\AI-for-Astronomy\code\Anomaly Detection\Inference
+   ...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Inference
    ```
 2. Locate the `inference.py` file in this directory.
 3. Open `inference.py` and update the directory paths in the following lines:
@@ -100,7 +100,7 @@ You have two options to get the code:
 
 1. Open your terminal and navigate to the directory containing `inference.py`:
    ```sh
-   cd ...\AI-for-Astronomy\code\Anomaly Detection\Inference
+   cd ...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Inference
    ```
 2. Run the inference script using the following command:
    ```sh
@@ -113,7 +113,7 @@ You have two options to get the code:
 
 1. Once the script completes, navigate to the following directory:
    ```
-   ...\AI-for-Astronomy-main\code\Anomaly Detection\Plots
+   ...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Plots
    ```
 2. Open the following files to view the results:
    - **inference.png**: This contains a visual representation of the inference results.
