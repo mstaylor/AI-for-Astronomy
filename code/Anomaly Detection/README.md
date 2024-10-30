@@ -35,10 +35,15 @@ The scatter plot visualizes the relationship between predicted redshift values (
 
 ### Additional Metrics
 
-- **Average Execution Time (ms) per Batch**: Reflects the model's efficiency, with lower values indicating faster batch processing.
-- **Batch Size**: Number of samples processed together in one forward or backward pass, affecting computational efficiency and memory usage.
-- **Number of Batches**: Total count of batches processed, indicating the data workload.
-- **Device**: Specifies the hardware used, such as 'cpu' or 'cuda', highlighting computational capability.
+- `total cpu time (second)`: Total time spent on CPU processing during execution, in seconds.
+- `total gpu time (second)`: Total time spent on GPU processing during execution, in seconds.
+- `execution time per batch (second)`: Average time taken to process each batch, in seconds.
+- `cpu memory (MB)`: CPU memory usage during execution, in megabytes.
+- `gpu memory (MB)`: GPU memory usage during execution, in megabytes.
+- `throughput (bps)`: Data processing rate in bits per second across all batches.
+- `batch size`: Number of samples in each batch.
+- `number of batches`: The total number of batches processed in the execution.
+- `device`: The hardware device (CPU or CUDA) used for execution.
 
 These metrics provide a detailed overview of AstroMAE's performance, emphasizing its effectiveness in redshift prediction tasks.
 
@@ -83,19 +88,19 @@ You have two options to get the code:
 
 1. Navigate to the following directory in your local project folder:
    ```
-   AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Inference
+   ...\AI-for-Astronomy\code\Anomaly Detection\Inference
    ```
 2. Locate the `inference.py` file in this directory.
 3. Open `inference.py` and update the directory paths in the following lines:
-   - **Line 2**: Update the path to point to the "Anomaly Detection" folder.
-   - **Line 79**: Update the path as needed for your system.
-   - **Line 83**: Update the path to point to the `resized_inference.pt` dataset.
+   - **Line 3**: Update the path to point to the "Anomaly Detection" folder.
+   - **Line 100**: Update the path as needed for your system.
+   - **Line 103**: Update the path to point to the `resized_inference.pt` dataset.
 
 ## Step 4: Run the Inference Script
 
 1. Open your terminal and navigate to the directory containing `inference.py`:
    ```sh
-   cd C:\...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Inference
+   cd ...\AI-for-Astronomy\code\Anomaly Detection\Inference
    ```
 2. Run the inference script using the following command:
    ```sh
@@ -108,7 +113,7 @@ You have two options to get the code:
 
 1. Once the script completes, navigate to the following directory:
    ```
-   C:\...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Plots
+   ...\AI-for-Astronomy-main\code\Anomaly Detection\Plots
    ```
 2. Open the following files to view the results:
    - **inference.png**: This contains a visual representation of the inference results.
