@@ -168,13 +168,13 @@ You have two options to get the code:
     Now install all the required packages:
     
     ```sh
-    pip install numpy torch matplotlib scipy scikit-learn timm
+    pip install torch==2.2.1 timm==0.4.12
+    pip install matplotlib scikit-learn scipy
+    pip install numpy==1.23.5
     ```
     
     ##### Deactivating the Environment
-    
-    Once you're done, deactivate the virtual environment:
-    
+      
     ```sh
     deactivate
     ```
