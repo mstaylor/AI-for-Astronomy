@@ -135,6 +135,50 @@ You have two options to get the code:
 
 - If you encounter issues with missing libraries, ensure you have installed all required packages by using `pip install`. The version of **timm** must be **0.4.12** to avoid compatibility issues.
 
+
+    #### Setting Up a Python Environment and Installing Packages
+    
+    Follow these steps to create a Python virtual environment and install the necessary packages (`numpy`, `torch`, `matplotlib`, `scipy`, `sklearn`, `timm`).
+    
+    ##### Step 1: Create a Virtual Environment
+    
+    To keep dependencies organized and avoid conflicts, it's recommended to create a virtual environment.
+    
+    ```sh
+    python -m venv myenv
+    ```
+    
+    This command creates a virtual environment named `myenv`.
+    
+    ##### Step 2: Activate the Virtual Environment
+    
+    To activate the environment, run:
+    
+    - On **Windows**:
+      ```sh
+      myenv\Scripts\activate
+      ```
+    - On **macOS/Linux**:
+      ```sh
+      source myenv/bin/activate
+      ```
+    
+    ##### Step 3: Install the Required Packages
+    
+    Now install all the required packages:
+    
+    ```sh
+    pip install numpy torch matplotlib scipy scikit-learn timm
+    ```
+    
+    ##### Deactivating the Environment
+    
+    Once you're done, deactivate the virtual environment:
+    
+    ```sh
+    deactivate
+    ```
+
 ### Notes
 
 - Ensure that all directory paths are properly set according to your system's file structure.
