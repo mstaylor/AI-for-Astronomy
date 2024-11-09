@@ -1,0 +1,12 @@
+{
+  "bucket": "cosmicai2",
+  "file_limit": "10",
+  "batch_size": 512,
+  "object_type": "folder",
+  "S3_object_name": "scripts/Anomaly Detection",
+  "data_path": "/tmp/scripts/Anomaly Detection/Inference/resized_inference.pt",
+  "script": "/tmp/scripts/Anomaly Detection/Inference/inference.py",
+  "result_path": "result/Batches/run 1",
+  "data_bucket": "cosmicai-data",
+  "data_prefix": ""
+}
