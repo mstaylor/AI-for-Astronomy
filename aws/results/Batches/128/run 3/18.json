@@ -1,0 +1,12 @@
+{
+    "total_cpu_time (seconds)": 22.47080383,
+    "total_cpu_memory (MB)": 71466.748196,
+    "execution_time (seconds/batch)": 0.5625391923019754,
+    "num_batches": 40,
+    "batch_size": 128,
+    "device": "cpu",
+    "throughput_bps": 37352917.42787645,
+    "sample_persec": 227.53970168053394,
+    "result_path": "result/Batches/128/run 3",
+    "data_path": "115.pt"
+}
