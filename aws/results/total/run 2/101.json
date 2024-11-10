@@ -1,12 +1,12 @@
 {
-    "total_cpu_time (seconds)": 20.606532649999966,
+    "total_cpu_time (seconds)": 20.321135417999994,
     "total_cpu_memory (MB)": 71461.283356,
-    "execution_time (seconds/batch)": 2.063474421435553,
+    "execution_time (seconds/batch)": 2.0348956256632107,
     "num_batches": 10,
     "batch_size": 512,
     "device": "cpu",
-    "throughput_bps": 40732232.55247658,
-    "sample_persec": 248.12519829725008,
+    "throughput_bps": 41304290.47072454,
+    "sample_persec": 251.60995657117772,
     "result_path": "result/total/run 2",
-    "data_path": "102.pt"
+    "data_path": "73.pt"
 }
