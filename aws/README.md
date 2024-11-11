@@ -1,6 +1,14 @@
-# Results on AWS State Machine
+# Data Parallel Inference
 
-Following is with batch size 512.
+Following shows the model design on AWS State Machine.
+
+<img src='./design.jpg' width='30%'/>
+
+## Results
+
+## Varying data size
+
+The total data size is 12.6GB. We run the inference for different sizes to evaluate the scaling performance with increasing data load. This experiment runs with size 100MB, 1GB, 2GB, 4GB, 6GB, 8GB, 10GB and 12.6GB. Batch size 512.
 
 | Data | Run | Num worlds | Job Duration (s) | Avg Inference Time (s) |
 |:---|:---|:---|:---|:---|
