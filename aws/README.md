@@ -2,7 +2,7 @@
 
 Following shows the model design on AWS State Machine.
 
-<img src='./design.jpg' width='30%'/>
+<img src='./design.jpg' width='40%'/>
 
 ## Results
 

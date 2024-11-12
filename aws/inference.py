@@ -1,6 +1,6 @@
 import sys, argparse
 
-sys.path.append('/tmp/scripts/Anomaly Detection/')  #adjust based on your system's directory
+sys.path.append('/tmp/Anomaly Detection/')  #adjust based on your system's directory
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
@@ -96,8 +96,8 @@ def data_loader(data, batch_size):
 
 #Iterate over data for predicting the redshift and invoke the evaluation modules
 def inference(
-    model, dataloader, plot_to_save_path, 
-    device, batch_size, rank, result_path, data_path
+    model, dataloader, device, batch_size, 
+    rank, result_path, data_path, args
 ):
     total_time = 0.0  # Initialize total time for execution
     num_batches = 0  # Initialize number of batches
@@ -152,14 +152,21 @@ def inference(
         'data_path': data_path
     }
     
-    with open(plot_to_save_path + 'Results.json', 'w') as json_file:
-        json.dump(execution_info, json_file, indent=4)
-
-    upload_file(
-        file_name=f'{prj_dir}Plots/Results.json',
-        bucket='cosmicai2',
-        object_name=f'{result_path}/{rank}.json'
+    s3_client.put_object(
+        Bucket=args.data_bucket,
+        Key=f'{result_path}/{rank}.json',
+        Body=json.dumps(execution_info),
+        ContentType="application/json"
     )
+    
+    # with open('Results.json', 'w') as json_file:
+    #     json.dump(execution_info, json_file, indent=4)
+
+    # upload_file(
+    #     file_name=f'{prj_dir}Plots/Results.json',
+    #     bucket='cosmicai2',
+    #     object_name=f'{result_path}/{rank}.json'
+    # )
     
 def concatenate_data(data_list):
     images = []
@@ -224,15 +231,15 @@ def engine(args):
     model = load_model(args.model_path, args.device)
     
     inference(
-        model, dataloader, args.plot_path, 
+        model, dataloader,
         device=args.device, batch_size=args.batch_size,
         rank=args.rank, result_path=args.result_path, 
-        data_path=args.data_path
+        data_path=args.data_path, args=args
     )
 
 # Pathes and other inference hyperparameters can be adjusted below
 if __name__ == '__main__':
-    prj_dir = '/tmp/scripts/Anomaly Detection/'  #adjust based on your system's directory
+    prj_dir = '/tmp/Anomaly Detection/'  #adjust based on your system's directory
     parser = argparse.ArgumentParser()
     # parser.add_argument(
     #     '--batch_size', type=int, default=512
@@ -260,7 +267,7 @@ if __name__ == '__main__':
     
     # TODO: get it from state-input
     # get the result path
-    obj = s3_client.get_object(Bucket='cosmicai2', Key='payload.json')
+    obj = s3_client.get_object(Bucket='cosmicai-data', Key='payload.json')
     file_content = obj["Body"].read().decode("utf-8")
     config = json.loads(file_content)
     

@@ -1,23 +1,6 @@
 import json, boto3
 import os, logging
 
-"""
-Demo input payload
-
-{
-  "bucket": "cosmicai2",
-  "file_limit": "2",
-  "batch_size": 32,
-  "object_type": "folder",
-  "S3_object_name": "scripts/Anomaly Detection",
-  "data_path": "/tmp/scripts/Anomaly Detection/Inference/resized_inference.pt",
-  "script": "/tmp/scripts/Anomaly Detection/Inference/inference.py",
-  "result_path": "results/demo",
-  "data_bucket": "cosmicai-data",
-  "data_prefix": ""
-}
-"""
-
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 s3_client = boto3.client('s3')
