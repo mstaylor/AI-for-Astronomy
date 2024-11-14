@@ -2,7 +2,7 @@
 
 Following shows the model design on AWS State Machine.
 
-<img src='./design.jpg' width='40%'/>
+<img src='./figures/workflow.jpg' width='50%'/>
 
 ## Results
 
@@ -12,16 +12,16 @@ The total data size is 12.6GB. We run the inference for different sizes to evalu
 
 | Data | Run | Num worlds | Job Duration (s) | Avg Inference Time (s) |
 |:---|:---|:---|:---|:---|
-| 100MB | 1 | 1 | 00:25.80 | |
+| 100MB | 1 | 1 | 00:30.30 | |
 |  | 2 | 1 | 00:27.02 | |
 |  | 3 | 1 | 00:36.00 | |
-| 1GB | 1 | 10 | 00:28.51 |  |
+| 1GB | 1 | 10 | 00:38.314 |  |
 |  | 2 | 10 | 00:28.85 | |
 |  | 3 | 10 | 00:30.77 | |
 | 2GB | 1 | 20 | 00:30.54 | |
 |  | 2 | 20 | 00:31.73 | |
 |  | 3 | 20 | 00:38.55 | |
-| 4GB | 1 | 40 | 00:47.56 |  |
+| 4GB | 1 | 40 | 01:01.291 |  |
 |  | 2 | 40 | 01:01.69 | |
 |  | 3 | 40 | 01:02.57 | |
 | 6GB | 1 | 60 | 00:56.67 |  |
@@ -33,8 +33,8 @@ The total data size is 12.6GB. We run the inference for different sizes to evalu
 | 10GB | 1 | 100 | 00:59.84 | |
 |  | 2 | 100 | 01:08.01 | |
 |  | 3 | 100 | 01:00.01 | |
-| Total | 1 | 130 | 00:58.21 | |
-|  | 2 | 130 | 00:59.30 | |
+| Total | 1 | 130 | 01:07.39 | |
+|  | 2 | 130 | 01:10.10 | |
 |  | 3 | 130 | 01:08.19 | |
 
 ## Varying batch sizes
@@ -78,3 +78,27 @@ Following is with 2GB data and changing batch sizes
 | 512 | 1 | 00:45.474 |  |
 |  | 2 | 00:46.783 |  |
 |  | 3 | 00:34.566 |  |
+
+Following is with 1GB data and changing batch sizes
+
+| Batch Size | Run | Job Duration (s) | Avg Inference Time (s) |
+|:---:|:---:|:---:|:---:|
+| 32 | 1 | 02:18.282 |  |
+|  | 2 | 02:19.304 |  |
+|  | 3 | 02:30.770 |  |
+| 64 | 1 | 01:38.751 |  |
+|  | 2 | 01:47.680 |  |
+|  | 3 | 01:43.734 |  |
+| 128 | 1 | 01:13.763 |  |
+|  | 2 | 01:15.658 |  |
+|  | 3 | 01:13.670 |  |
+| 256 | 1 | 01:02.622 |  |
+|  | 2 | 01:00.940 |  |
+|  | 3 | 01:00.611 |  |
+| 512 | 1 | 00:45.474 |  |
+|  | 2 | 00:46.783 |  |
+|  | 3 | 00:34.566 |  |
+
+## Notes
+
+* [Economics of 'Serverless](https://www.bbva.com/en/innovation/economics-of-serverless/)

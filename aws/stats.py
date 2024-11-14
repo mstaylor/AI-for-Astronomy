@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # sync aws and local folders
-# aws s3 sync s3://cosmicai2/result results
+# aws s3 sync s3://cosmicai-data/results results
 
 def average_varying_batch_size():
     batch_sizes = [32, 64, 128, 256, 512]
@@ -11,7 +11,7 @@ def average_varying_batch_size():
     all_results = []
 
     keys = ['total_cpu_time (seconds)', "total_cpu_memory (MB)", "throughput_bps"]
-    data_size = '2GB'
+    data_size = '1GB'
     column_name = 'batch_size'
 
     for batch_size in batch_sizes:
@@ -43,7 +43,7 @@ def average_varying_batch_size():
     all_results = pd.concat([all_results, mean], axis=0)
     all_results.sort_values([column_name, 'run'], inplace=True)
     
-    all_results.round(2).to_csv('batch_varying_results.csv', index=False)
+    all_results.round(2).to_csv('./results/batch_varying_results.csv', index=False)
 
 def average_varying_data_size():
     data_sizes = ['0.1GB', '1GB', '2GB', '4GB', '6GB', '8GB', '10GB', 'total']
@@ -81,7 +81,7 @@ def average_varying_data_size():
     all_results = pd.concat([all_results, mean], axis=0)
     all_results.sort_values(['data_size', 'run'], inplace=True)
 
-    all_results.round(2).to_csv('./result_stats.csv', index=False)
+    all_results.round(2).to_csv('./results/result_stats.csv', index=False)
 
 
 if __name__ == '__main__':
