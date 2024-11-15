@@ -35,7 +35,9 @@ def average_varying_batch_size():
     all_results = pd.concat(all_results)
     # all_results = all_results[['data_size', 'run'] + keys]
     all_results = all_results.groupby([column_name, 'run'])[keys].agg({
-        keys[0]: 'mean', keys[1]: 'sum', keys[2]: 'mean'
+        'total_cpu_time (seconds)': 'mean', 
+        "total_cpu_memory (MB)": 'sum', 
+        "throughput_bps": 'sum'
     }).reset_index()
     
     mean = all_results.groupby(column_name)[keys].mean().reset_index()
@@ -73,7 +75,9 @@ def average_varying_data_size():
     all_results = pd.concat(all_results)
     # all_results = all_results[['data_size', 'run'] + keys]
     all_results = all_results.groupby(['data_size', 'run'])[keys].agg({
-        keys[0]: 'mean', keys[1]: 'sum', keys[2]: 'mean'
+        'total_cpu_time (seconds)': 'mean', 
+        "total_cpu_memory (MB)": 'sum', 
+        "throughput_bps": 'sum'
     }).reset_index()
 
     mean = all_results.groupby(['data_size'])[keys].mean().reset_index()

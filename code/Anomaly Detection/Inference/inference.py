@@ -1,6 +1,7 @@
 import sys, argparse, json
 from torch.profiler import profile, record_function, ProfilerActivity
-sys.path.append('/scratch/aww9gh/Cosmic_Cloud/AI-for-Astronomy/code/Anomaly Detection/') #adjust based on your system's directory
+# sys.path.append('/scratch/aww9gh/Cosmic_Cloud/AI-for-Astronomy/code/Anomaly Detection/') #adjust based on your system's directory
+sys.path.append('..') #adjust based on your system's directory
 import torch, time, os 
 import numpy as np
 import Plot_Redshift as plt_rdshft
@@ -60,8 +61,8 @@ def inference(model, dataloader, real_redshift, save_path, device, batch_size):
     total_gpu_memory = prof.key_averages().total_average().cuda_memory_usage / 1e6  # Convert bytes to MB
 
     # Extract total CPU and GPU time
-    total_cpu_time = prof.key_averages().total_average().cpu_time_total / 1e3  # Convert from microseconds to milliseconds
-    total_gpu_time = prof.key_averages().total_average().cuda_time_total / 1e3  # Convert from microseconds to milliseconds
+    total_cpu_time = prof.key_averages().total_average().cpu_time_total / 1e6  # Convert from microseconds to seconds
+    total_gpu_time = prof.key_averages().total_average().cuda_time_total / 1e6  # Convert from microseconds to seconds
 
     if device == 'cuda':
         total_time = total_gpu_time
@@ -71,17 +72,17 @@ def inference(model, dataloader, real_redshift, save_path, device, batch_size):
     avg_time_batch = total_time / num_batches
     
     execution_info = {
-            'total_cpu_time': total_cpu_time * 10 ** -3,
-            'total_gpu_time': total_gpu_time * 10 ** -3,
+            'total_cpu_time': total_cpu_time,
+            'total_gpu_time': total_gpu_time,
             'total_cpu_memory': total_cpu_memory, 
             'total_gpu_memory': total_gpu_memory,
-            'execution_time_per_batch': avg_time_batch * 10 ** -3,   # Average execution time per batch
+            'execution_time_per_batch': avg_time_batch,   # Average execution time per batch
             'num_batches': num_batches,   # Number of batches
             'batch_size': batch_size,   # Batch size
             'device': device,   # Selected device
-            'throughput_bps': 10 ** 3 * total_data_bits / total_time,   # Throughput in bits per second (using total_time for all batches)
+            'throughput_bps': total_data_bits / total_time,   # Throughput in bits per second (using total_time for all batches)
         }
-    
+    print(execution_info)
     # Invoke the evaluation metrics
     plt_rdshft.err_calculate(redshift_analysis, real_redshift, execution_info, save_path)  
     plt_rdshft.plot_density(redshift_analysis, real_redshift, save_path)
@@ -97,7 +98,7 @@ def engine(args):
     
 # Pathes and other inference hyperparameters can be adjusted below
 if __name__ == '__main__':
-    prj_dir = '/scratch/aww9gh/Cosmic_Cloud/AI-for-Astronomy/code/Anomaly Detection/' #adjust based on your system's directory
+    prj_dir = '../' #adjust based on your system's directory
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--data_path', type = str, default = 'resized_inference.pt')
