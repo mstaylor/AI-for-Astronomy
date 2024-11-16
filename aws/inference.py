@@ -9,7 +9,7 @@ from botocore.exceptions import ClientError
 import logging
 import os, gc 
 from torch.profiler import profile, ProfilerActivity
-import json, platform, boto3, io
+import json, platform, io
 import numpy as np
 
 s3_client = boto3.client('s3')

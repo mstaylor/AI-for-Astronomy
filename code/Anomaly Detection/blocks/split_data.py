@@ -3,11 +3,14 @@ import torch, os, gc
 from tqdm import tqdm
 
 #add the data path
-load_data_path = '../../../data/total.pt'
+load_data_path = '../../../raw_data/total.pt'
 #add the path you want to store chunks
-save_data_path = '/'.join(load_data_path.split('/')[:-1])
+save_data_path = '../../../raw_data/200MB' # '/'.join(load_data_path.split('/')[:-1])
 load_data_name = load_data_path.split('/')[-1].replace('.pt', '')
 print(f'Data will be saved in {save_data_path}')
+if not os.path.exists(save_data_path):
+    os.makedirs(save_data_path, exist_ok=True)
+    
 # Load the data
 data = torch.load(load_data_path, weights_only=False)
 
@@ -24,6 +27,12 @@ print(f'Splitting data of length {data_length} into {num_chunks} chunks of size 
 
 # Save each chunk separately
 for i in tqdm(range(num_chunks)):
+    filename = f'{i+1}.pt'
+    filepath = os.path.join(save_data_path, filename)
+    if os.path.exists(filepath):
+        print(f'File {filename} already exists. Skipping...')
+        continue
+    
     start = i * chunk_size
     end = min((i + 1) * chunk_size, data_length)
     
@@ -34,10 +43,7 @@ for i in tqdm(range(num_chunks)):
     
     # Saving the chunks to separate files
     chunk = TensorDataset(torch.tensor(chunk_0), torch.tensor(chunk_1), torch.tensor(chunk_2))
-    filename = f'{i+1}.pt'
-    filepath = os.path.join(save_data_path, filename)
     torch.save(chunk, filepath)
     
     del chunk, chunk_0, chunk_1, chunk_2
     gc.collect()
-    # break
