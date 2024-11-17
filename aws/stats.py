@@ -88,5 +88,8 @@ def average_varying_data_size():
     all_results.round(2).to_csv('./results/result_stats.csv', index=False)
 
 if __name__ == '__main__':
-    average_varying_batch_size()
-    average_varying_data_size()
+    # average_varying_batch_size()
+    # average_varying_data_size()
+    df = pd.read_csv('./results/total_execution_time.csv')
+    df['num_worlds'] = np.ceil(df['data(GB)'] * 1024 / df['partition(MB)'])
+    df.to_csv('./results/total_execution_time.csv', index=False)
