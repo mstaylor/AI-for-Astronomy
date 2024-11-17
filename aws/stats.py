@@ -5,9 +5,7 @@ import numpy as np
 # sync aws and local folders
 # aws s3 sync s3://cosmicai-data/results results
 
-def average_varying_batch_size():
-    batch_sizes = [32, 64, 128, 256, 512]
-    runs = 3
+def average_varying_batch_size(batch_sizes, runs):
     all_results = []
 
     keys = ['total_cpu_time (seconds)', "total_cpu_memory (MB)", "throughput_bps"]
@@ -16,7 +14,8 @@ def average_varying_batch_size():
 
     for batch_size in batch_sizes:
         for run in range(1, runs+1):
-            with open(f'./results/{data_size}/Batches/{batch_size}/run {run}/combined_data.json', 'r') as f:
+            combined_file = f'./results-partition-100MB/{data_size}/Batches/{batch_size}/run {run}/combined_data.json'
+            with open(combined_file, 'r') as f:
                 data = json.load(f)
                 
                 results = {
@@ -45,51 +44,67 @@ def average_varying_batch_size():
     all_results = pd.concat([all_results, mean], axis=0)
     all_results.sort_values([column_name, 'run'], inplace=True)
     
-    all_results.round(2).to_csv('./results/batch_varying_results.csv', index=False)
+    filename = './results/batch_varying_results.csv'
+    all_results.round(2).to_csv(filename, index=False)
+    print(f"Results saved to {filename}")
 
-def average_varying_data_size():
-    data_sizes = ['0.1GB', '1GB', '2GB', '4GB', '6GB', '8GB', '10GB', 'total']
-    runs = 3
+def average_varying_data_size(data_sizes, runs):
     all_results = []
 
     keys = ['total_cpu_time (seconds)', "total_cpu_memory (MB)", "throughput_bps"]
+    partitions = [25, 50, 75, 100] # in MB
 
-    for data_size in data_sizes:
-        for run in range(1, runs+1):
-            with open(f'./results/{data_size}/run {run}/combined_data.json', 'r') as f:
-                data = json.load(f)
+    for partition in partitions:
+        for data_size in data_sizes:
+            for run in range(1, runs+1):
+                combined_file = f'./result-partition-{partition}MB/{data_size}/run {run}/combined_data.json'
+                if not os.path.exists(combined_file):
+                    combined_file = f'./result-partition-{partition}MB/{data_size}/{run}/combined_data.json'
                 
-                results = {
-                    key: [] for key in keys
-                }
+                if not os.path.exists(combined_file):
+                    print(f'File not found: {combined_file}')
+                    continue
                 
-                for d in data:
-                    for key in keys:
-                        results[key].append(d[key])
-                
-                results = pd.DataFrame(results)
-                results['run'] = run
-                results['data_size'] = data_size
-                all_results.append(results)
+                with open(combined_file, 'r') as f:
+                    data = json.load(f)
+                    
+                    results = {key: [] for key in keys}
+                    for d in data:
+                        for key in keys:
+                            results[key].append(d[key])
+                    
+                    results = pd.DataFrame(results)
+                    results['partition(MB)'] = partition
+                    results['run'] = run
+                    
+                    if data_size == 'total':
+                        results['data(GB)'] = 12.6
+                    else: results['data(GB)'] = float(data_size.replace('GB', ''))
+                    
+                    all_results.append(results)
                 
     all_results = pd.concat(all_results)
     # all_results = all_results[['data_size', 'run'] + keys]
-    all_results = all_results.groupby(['data_size', 'run'])[keys].agg({
+    all_results = all_results.groupby(['partition(MB)','data(GB)', 'run'])[keys].agg({
         'total_cpu_time (seconds)': 'mean', 
         "total_cpu_memory (MB)": 'sum', 
         "throughput_bps": 'sum'
     }).reset_index()
 
-    mean = all_results.groupby(['data_size'])[keys].mean().reset_index()
-    mean.insert(1, 'run', 'mean')
+    mean = all_results.groupby(['partition(MB)','data(GB)'])[keys].mean().reset_index()
+    mean.insert(2, 'run', 'mean')
     all_results = pd.concat([all_results, mean], axis=0)
-    all_results.sort_values(['data_size', 'run'], inplace=True)
+    all_results.sort_values(['partition(MB)', 'data(GB)', 'run'], inplace=True)
 
-    all_results.round(2).to_csv('./results/result_stats.csv', index=False)
+    filename = './results/result_stats.csv'
+    all_results.round(2).to_csv(filename, index=False)
+    print(f'File saved at {filename}')
 
 if __name__ == '__main__':
-    # average_varying_batch_size()
-    # average_varying_data_size()
-    df = pd.read_csv('./results/total_execution_time.csv')
-    df['num_worlds'] = np.ceil(df['data(GB)'] * 1024 / df['partition(MB)'])
-    df.to_csv('./results/total_execution_time.csv', index=False)
+    partitions = [25, 50, 75, 100] # in MB
+    data_sizes = ['1GB', '2GB', '4GB', '6GB', '8GB', '10GB', 'total']
+    runs = 3
+    batch_sizes = [32, 64, 128, 256, 512]
+    
+    # average_varying_batch_size(batch_sizes, runs)
+    average_varying_data_size(data_sizes, runs)
