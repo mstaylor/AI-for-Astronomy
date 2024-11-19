@@ -3,7 +3,30 @@ import pandas as pd
 import numpy as np
 
 # sync aws and local folders
-# aws s3 sync s3://cosmicai-data/results results
+# aws s3 sync s3://cosmicai-data/result-partition-100MB result-partition-100MB
+
+def remove_outliers_and_mean(data, threshold=1.5):
+    """
+    Removes outliers from the data and calculates the mean of the remaining values.
+
+    Args:
+        data (list or array): The data to process.
+        threshold (float): The IQR multiplier for outlier detection.
+
+    Returns:
+        float: The mean of the data after removing outliers.
+    """
+
+    q1 = np.percentile(data, 25)
+    q3 = np.percentile(data, 75)
+    iqr = q3 - q1
+
+    lower_bound = q1 - threshold * iqr
+    upper_bound = q3 + threshold * iqr
+
+    filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
+
+    return np.mean(filtered_data)
 
 def average_varying_batch_size(batch_sizes, runs):
     all_results = []
@@ -14,7 +37,7 @@ def average_varying_batch_size(batch_sizes, runs):
 
     for batch_size in batch_sizes:
         for run in range(1, runs+1):
-            combined_file = f'./results-partition-100MB/{data_size}/Batches/{batch_size}/run {run}/combined_data.json'
+            combined_file = f'./result-partition-100MB/{data_size}/Batches/{batch_size}/run {run}/combined_data.json'
             with open(combined_file, 'r') as f:
                 data = json.load(f)
                 
@@ -34,7 +57,7 @@ def average_varying_batch_size(batch_sizes, runs):
     all_results = pd.concat(all_results)
     # all_results = all_results[['data_size', 'run'] + keys]
     all_results = all_results.groupby([column_name, 'run'])[keys].agg({
-        'total_cpu_time (seconds)': 'mean', 
+        'total_cpu_time (seconds)': remove_outliers_and_mean, 
         "total_cpu_memory (MB)": 'sum', 
         "throughput_bps": 'sum'
     }).reset_index()
@@ -86,7 +109,7 @@ def average_varying_data_size(data_sizes, runs):
     all_results = pd.concat(all_results)
     # all_results = all_results[['data_size', 'run'] + keys]
     all_results = all_results.groupby(['partition(MB)','data(GB)', 'run'])[keys].agg({
-        'total_cpu_time (seconds)': 'mean', 
+        'total_cpu_time (seconds)': remove_outliers_and_mean, 
         "total_cpu_memory (MB)": 'sum', 
         "throughput_bps": 'sum'
     }).reset_index()
@@ -106,5 +129,5 @@ if __name__ == '__main__':
     runs = 3
     batch_sizes = [32, 64, 128, 256, 512]
     
-    # average_varying_batch_size(batch_sizes, runs)
-    average_varying_data_size(data_sizes, runs)
+    average_varying_batch_size(batch_sizes, runs)
+    # average_varying_data_size(data_sizes, runs)
