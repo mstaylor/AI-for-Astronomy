@@ -4,7 +4,6 @@
   "batch_size": 512,
   "object_type": "folder",
   "S3_object_name": "Anomaly Detection",
-  "data_path": "",
   "script": "/tmp/Anomaly Detection/Inference/inference.py",
   "result_path": "result-partition-25MB/1GB/1",
   "data_bucket": "cosmicai-data",
