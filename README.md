@@ -2,7 +2,7 @@
 
 This proposes a novel **Cloud-based Astronomy Inference (CAI)** framework for data parallel AI model inference on AWS. We can classify 500K astronomy images using the AstroMAE model in a minute ! 
 
-<div style="text-align: center;">
+<div align="center" style="overflow-x:auto;">
 
 #### Fig 1: CAI framework design on AWS State Machine.
 
@@ -26,14 +26,14 @@ The total data size is 12.6GB. We run the inference for different sizes to evalu
 
 Please check the [result_stats.csv](./aws/results/result_stats.csv) for the average results.
 
-<div style="text-align: center;">
+<div align="center" style="overflow-x:auto;">
 
 #### Fig 2: Dataset size vs Inference time for each partition
 
 <img src='./aws/figures/inference_time.jpg' width='70%'/>
 </div>
 
-<div style="text-align: center;">
+<div align="center" style="overflow-x:auto;">
 
 #### Fig 3: Data size vs Throughput for each partition
 
@@ -44,14 +44,14 @@ Please check the [result_stats.csv](./aws/results/result_stats.csv) for the aver
 
 We use the 1GB data and change batch size by [32, 64, 128, 256, 512]. The results are in [batch_varying_results.csv](./aws/results/batch_varying_results.csv).
 
-<div style="text-align: center;">
+<div align="center" style="overflow-x:auto;">
 
 #### Fig 4: Batch size vs Inference Time
 
 <img src='./aws/figures/batch_varying_inference_time.jpg' width='70%' style="{align:center}"/>
 </div>
 
-<div style="text-align: center;">
+<div align="center" style="overflow-x:auto;">
 
 #### Fig 5: Batch size vs Throughput
 
@@ -73,6 +73,7 @@ Estimated AWS computation cost summary for inference on the total dataset. Cost 
 | 50MB | 259 | 11.8 | 4.0GB | 0.20 |
 | 75MB | 173 | 17.6 | 5.9GB| 0.30 |
 | 100MB | 130 | 25 | 7.0GB | 0.38 |
+
 </div>
 
 The number of requests is how many times the Lambda function was called, which is the number of concurrent jobs (data divided by partition size). The maximum memory size can be configured based on memory usage (smaller partitions use less memory). Other costs, for example, request charge ($2e-7/request), and storage charge ($3.09e-8/GB-s if > 512MB) are negligible.
