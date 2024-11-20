@@ -1,28 +1,17 @@
-<style>
-    .center {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    img {
-        /* max-width: 60%; */
-        display: flex;
-        margin: auto;
-    }
-</style>
-
 # Cloud-based Astronomy Inference (CAI)
 
 This proposes a novel **Cloud-based Astronomy Inference (CAI)** framework for data parallel AI model inference on AWS. We can classify 500K astronomy images using the AstroMAE model in a minute ! 
 
+<div style="text-align: center;">
+
 #### Fig 1: CAI framework design on AWS State Machine.
 
-<img src='./aws/figures/cai workflow.jpg' width='50%' />
+<img src='./aws/figures/cai workflow.jpg' width='50%'/>
+</div>
 
 A brief description of the workflow:
 
-1. *Initialize*: Based on the input payload ([Sample input](./aws/demo%20input.json)) list the partition files and config for each job. Returns an array. 
+1. *Initialize*: Based on the input payload ([Sample input](./aws/demo%20input.json)) list the partition files and config for each job. Returns an array.
 2. *Distributed Model Inference*: Runs distributed map of Lambda executions based on the array returned by previous state. Each of these jobs:
    1. Load the code, pretrained AI model in a container. 
    2. Download a partition file as specified in input config. The paritions are created and uploaded to a S3 bucket beforehand.
@@ -37,23 +26,37 @@ The total data size is 12.6GB. We run the inference for different sizes to evalu
 
 Please check the [result_stats.csv](./aws/results/result_stats.csv) for the average results.
 
+<div style="text-align: center;">
+
 #### Fig 2: Dataset size vs Inference time for each partition
 
 <img src='./aws/figures/inference_time.jpg' width='70%'/>
+</div>
+
+<div style="text-align: center;">
 
 #### Fig 3: Data size vs Throughput for each partition
 
 <img src='./aws/figures/throughput.jpg' width='70%'/>
+</div>
 
 ### Varying batch size
+
+We use the 1GB data and change batch size by [32, 64, 128, 256, 512]. The results are in [batch_varying_results.csv](./aws/results/batch_varying_results.csv).
+
+<div style="text-align: center;">
 
 #### Fig 4: Batch size vs Inference Time
 
 <img src='./aws/figures/batch_varying_inference_time.jpg' width='70%' style="{align:center}"/>
+</div>
+
+<div style="text-align: center;">
 
 #### Fig 5: Batch size vs Throughput
 
 <img src='./aws/figures/batch_varying_throughput.jpg' width='70%'/>
+</div>
 
 ## Cost estimate
 
