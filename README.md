@@ -18,7 +18,56 @@ A brief description of the workflow:
    3. Run inference on the file and write the execution info to the `result_path`.
 3. *Summarize*: Summarize the results returned by each lambda execution in the previous distributed map. Concatenate all of those result.json files into a single combined_data.json.
 
+## Reproduce
+
+<details>
+
+### Data processing
+
+The whole data needs to be split into smaller chunks so that we can run parallel executions on them.
+
+1. Get the total dataset. @Amir can share the raw file.
+2. Split into smaller chunks (e.g. 10MB) using the [split_data.py](./aws/split_data.py).
+3. Now upload those file partitions into a S3 bucket.
+
+### Code
+
+Upload the [Anomaly Detection](./code/Anomaly%20Detection/) folder into a S3 bucket.
+
+### Input Payload
+
+This is passed to the state machine as input. It assumes the code and data are loaded into a S3 bucket named `cosmicai-data`. You can update the lambda functions to change it. The following is a [sample input payload](./aws/demo%20input.json):
+
+```json
+{
+  "bucket": "cosmicai-data",
+  "file_limit": "11",
+  "batch_size": 512,
+  "object_type": "folder",
+  "S3_object_name": "Anomaly Detection",
+  "script": "/tmp/Anomaly Detection/Inference/inference.py",
+  "result_path": "result-partition-100MB/1GB/1",
+  "data_bucket": "cosmicai-data",
+  "data_prefix": "100MB"
+}
+```
+
+This means, the [Anomaly Detection](./code/Anomaly%20Detection/) folder is uploaded in `cosmicai-data` bucket. The partition files are in `cosmicai-data/100MB` folder (`data_bucket/data_prefix`). Our inference batch size is 512. We set the file limit to 11, since 1GB file with 100MB partition size will have ceil(1042MB / 100MB) = 11 files. We decided to save the results in `bucket/result_path` which is `cosmicai-data/result-partition-100MB/1GB/1` in this case.
+
+### Inference
+
+Create a state machine that contains the following Lambda functions.
+
+1. Initialize: Create a lambda function (e.g. `data-parallel-init`) with the [lambda_initializer](./aws/lambda/lambda_initializer.py). Attach necessary permissions to the execution role: `AmazonS3FullAccess`, `AWSLambda_FullAccess`, `AWSLambdaBasicExecutionRole`, `loudWatchActionsEC2Access`.  Create a cloudwatch log group with the same name as `/aws/lambda/data-parallel-init`. Log group helps debugging errors.
+2. Distributed Inference: Create a distributed map using a lambda container that has all required libraries installed and starts the python code at `script` location.
+3. Summarize: Create a Lambda using [lambda_summarizer.py](./aws/lambda/lambda_summarizer.py).
+
+
+</details>
+
 ## Results
+
+<details>
 
 ### Varying data size
 
@@ -57,6 +106,8 @@ We use the 1GB data and change batch size by [32, 64, 128, 256, 512]. The result
 
 <img src='./aws/figures/batch_varying_throughput.jpg' width='70%'/>
 </div>
+
+</details>
 
 ## Cost estimate
 

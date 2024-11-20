@@ -5,7 +5,7 @@ from tqdm import tqdm
 #add the data path
 load_data_path = '../../../raw_data/total.pt'
 #add the path you want to store chunks
-save_data_path = '../../../raw_data/200MB' # '/'.join(load_data_path.split('/')[:-1])
+save_data_path = '../../../raw_data/100MB' # '/'.join(load_data_path.split('/')[:-1])
 load_data_name = load_data_path.split('/')[-1].replace('.pt', '')
 print(f'Data will be saved in {save_data_path}')
 if not os.path.exists(save_data_path):
