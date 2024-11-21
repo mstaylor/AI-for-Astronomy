@@ -109,13 +109,13 @@ Create a state machine that contains the following Lambda functions.
 
 </div>
 
-</details>
-
 ### Collect Results
 
-1. I collected the results locally using `aws cli`. After installing and configuring it for the class account running `aws s3 sync s3://cosmicai-data/result-partition-100MB result-partition-100MB` will sync the result file locally. 
+1. I collected the results locally using `aws cli`. After installing and configuring it for the class account running `aws s3 sync s3://cosmicai-data/result-partition-100MB result-partition-100MB` will sync the result file locally.
 2. The [stats.py](./aws/stats.py) iterates through each `combined_data.json` file and saves the summary in [batch_varying_results.csv](./aws/results/batch_varying_results.csv) when batch size is changed for 1GB data and [result_stats.csv](./aws/results/result_stats.csv) for varying data sizes.
 3. The total execution times were manually added in [total_execution_time.csv](./aws/results/total_execution_time.csv).
+
+</details>
 
 ## Results
 
