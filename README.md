@@ -22,7 +22,7 @@ A brief description of the workflow:
 
 <details>
 
-### Data processing
+### Data Processing
 
 The whole data needs to be split into smaller chunks so that we can run parallel executions on them.
 
@@ -52,18 +52,70 @@ This is passed to the state machine as input. It assumes the code and data are l
 }
 ```
 
-This means, the [Anomaly Detection](./code/Anomaly%20Detection/) folder is uploaded in `cosmicai-data` bucket. The partition files are in `cosmicai-data/100MB` folder (`data_bucket/data_prefix`). Our inference batch size is 512. We set the file limit to 11, since 1GB file with 100MB partition size will have ceil(1042MB / 100MB) = 11 files. We decided to save the results in `bucket/result_path` which is `cosmicai-data/result-partition-100MB/1GB/1` in this case.
+This means
 
-### Inference
+* The [Anomaly Detection](./code/Anomaly%20Detection/) folder is uploaded in `cosmicai-data` bucket. 
+* The partition files are in `cosmicai-data/100MB` folder (`data_bucket/data_prefix`). 
+* Our inference batch size is 512.
+* This is running for `1GB` data.
+* The results are saved in `bucket/result_path` which is `cosmicai-data/result-partition-100MB/1GB/1` in this case.
+* We set the file limit to 11, since 1GB file with 100MB partition size will need ceil(1042MB / 100MB) = 11 files. Using 22 files here will run ro 2GB data. See the [total_execution_time.csv](./aws/results/total_execution_time.csv) for what should be the file_limit for different partitions and data sizes.
+
+If you need to change more
+
+* We run each experiment 3 times. Hence `1GB/1`, `1GB/2` and `1GB/3`.
+* To benchmark for different batch sizes (32, 64, 128, 256, 512), when keeping the data size same, I saved them in `Batches` subfolder. For example, `result-partition-100MB/1GB/Batches/`.
+* If you are running your own experiments, just ensure you change the `result_path` to a different folder (e.g. `team1/result-partition-100MB/1GB/1` is ok).
+
+### State Machine
 
 Create a state machine that contains the following Lambda functions.
 
-1. Initialize: Create a lambda function (e.g. `data-parallel-init`) with the [lambda_initializer](./aws/lambda/lambda_initializer.py). Attach necessary permissions to the execution role: `AmazonS3FullAccess`, `AWSLambda_FullAccess`, `AWSLambdaBasicExecutionRole`, `loudWatchActionsEC2Access`.  Create a cloudwatch log group with the same name as `/aws/lambda/data-parallel-init`. Log group helps debugging errors.
-2. Distributed Inference: Create a distributed map using a lambda container that has all required libraries installed and starts the python code at `script` location.
-3. Summarize: Create a Lambda using [lambda_summarizer.py](./aws/lambda/lambda_summarizer.py).
+<div align="center" style="overflow-x:auto;">
 
+#### Fig: AWS State Machine.
+
+<img src='./aws/figures/design.jpg' width='50%'/>
+</div>
+
+1. Initialize: Create a lambda function (e.g. `data-parallel-init`) with the [lambda_initializer](./aws/lambda/lambda_initializer.py). 
+   1. Attach necessary permissions to the execution role: `AmazonS3FullAccess`, `AWSLambda_FullAccess`, `AWSLambdaBasicExecutionRole`, `loudWatchActionsEC2Access`.
+   2. Create a cloudwatch log group with the same name as `/aws/lambda/data-parallel-init`. Log group helps debugging errors.
+   3. This script creates an array of job configs based on the input payload for each file. Then save it as `payload.json` in the `bucket`.
+2. Distributed Inference: Create a distributed map using a lambda container that has all required libraries installed. This fetches the `S3_object_name` folder and starts the python file at `script`. The script does the following:
+   1. Read the environment variables (rank, world size). Also the `payload.json` from the `bucket`. This part is hard-coded and should be changed if you want to read payload from a different location.
+   2. Fetch the file from `data_bucket/data_prefix` folder.
+   3. Run inference and benchmark the execution info.
+   4. Save the json file in `result_path` location as `rank_no.json`.
+3. Summarize: Create a Lambda using [lambda_summarizer.py](./aws/lambda/lambda_summarizer.py). Same role permissions as the Initialize. 
+   1. Reads the result json files created in the previous state.
+   2. Concatenates all to get `combined_data.json` and saves it at `result_path`.
+
+### Run
+
+<div align="center" style="overflow-x:auto;">
+
+#### Step 1: Go to the AWS State Machine. Click Start execution.
+
+<img src='./aws/figures/start execution.jpg' width='80%'/>
+
+#### Step 2: Copy the input payload. Modify as needed.
+
+<img src='./aws/figures/pass input.jpg' width='80%'/>
+
+#### Step 3: Once succeeds, check the result paths for output.
+
+<img src='./aws/figures/execution succeeded.jpg' width='80%'/>
+
+</div>
 
 </details>
+
+### Collect Results
+
+1. I collected the results locally using `aws cli`. After installing and configuring it for the class account running `aws s3 sync s3://cosmicai-data/result-partition-100MB result-partition-100MB` will sync the result file locally. 
+2. The [stats.py](./aws/stats.py) iterates through each `combined_data.json` file and saves the summary in [batch_varying_results.csv](./aws/results/batch_varying_results.csv) when batch size is changed for 1GB data and [result_stats.csv](./aws/results/result_stats.csv) for varying data sizes.
+3. The total execution times were manually added in [total_execution_time.csv](./aws/results/total_execution_time.csv).
 
 ## Results
 

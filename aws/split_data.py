@@ -3,9 +3,9 @@ import torch, os, gc
 from tqdm import tqdm
 
 #add the data path
-load_data_path = '../../../raw_data/total.pt'
+load_data_path = '../raw_data/total.pt'
 #add the path you want to store chunks
-save_data_path = '../../../raw_data/100MB' # '/'.join(load_data_path.split('/')[:-1])
+save_data_path = '../raw_data/10MB' # '/'.join(load_data_path.split('/')[:-1])
 load_data_name = load_data_path.split('/')[-1].replace('.pt', '')
 print(f'Data will be saved in {save_data_path}')
 if not os.path.exists(save_data_path):
@@ -20,7 +20,7 @@ data_length = len(data.tensors[0])  # Assuming it's a TensorDataset
 # num_chunks = 60
 # chunk_size = (data_length + num_chunks - 1) // num_chunks
 
-chunk_size = 5113 # creates exactly 100MB size
+chunk_size = 5113//10 # creates exactly 100MB size
 num_chunks = (data_length + chunk_size - 1) // chunk_size
 
 print(f'Splitting data of length {data_length} into {num_chunks} chunks of size {chunk_size}')
@@ -47,3 +47,5 @@ for i in tqdm(range(num_chunks)):
     
     del chunk, chunk_0, chunk_1, chunk_2
     gc.collect()
+    # if i == 10:
+    #     break
