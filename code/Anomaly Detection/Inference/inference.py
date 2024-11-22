@@ -47,10 +47,9 @@ def inference(model, dataloader, real_redshift, save_path, device, batch_size):
                 num_batches += 1
                 
                 # Calculate data size for this batch
-                current_batch_size = image.shape[0]
-                image_bits = current_batch_size * 5 * 32 * 32 * 32  # Image bits per batch
-                magnitude_bits = current_batch_size * 5 * 64  # Magnitude bits per batch
-                total_data_bits += (image_bits + magnitude_bits)  # Accumulate data bits
+                image_bits = image.element_size() * image.nelement() * 8  # Convert bytes to bits
+                magnitude_bits = magnitude.element_size() * magnitude.nelement() * 8  # Convert bytes to bits
+                total_data_bits += image_bits + magnitude_bits  # Add data bits for this batch
 
     num_samples = len(real_redshift)
     redshift_analysis = torch.cat(redshift_analysis, dim=0)
@@ -64,11 +63,9 @@ def inference(model, dataloader, real_redshift, save_path, device, batch_size):
     total_cpu_time = prof.key_averages().total_average().cpu_time_total / 1e6  # Convert from microseconds to seconds
     total_gpu_time = prof.key_averages().total_average().cuda_time_total / 1e6  # Convert from microseconds to seconds
 
-    if device == 'cuda':
-        total_time = total_gpu_time
-    else:
-        total_time = total_cpu_time
-        
+    
+    total_time = max(total_cpu_time, total_gpu_time)
+  
     avg_time_batch = total_time / num_batches
     
     execution_info = {
@@ -82,7 +79,6 @@ def inference(model, dataloader, real_redshift, save_path, device, batch_size):
             'device': device,   # Selected device
             'throughput_bps': total_data_bits / total_time,   # Throughput in bits per second (using total_time for all batches)
         }
-    print(execution_info)
     # Invoke the evaluation metrics
     plt_rdshft.err_calculate(redshift_analysis, real_redshift, execution_info, save_path)  
     plt_rdshft.plot_density(redshift_analysis, real_redshift, save_path)
@@ -103,7 +99,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--data_path', type = str, default = 'resized_inference.pt')
     parser.add_argument('--model_path', type = str, default  = prj_dir + 'Fine_Tune_Model/Mixed_Inception_z_VITAE_Base_Img_Full_New_Full.pt')
-    parser.add_argument('--device', type = str, default = 'cuda')    # To run on GPU, put cuda, and on CPU put cpu
+    parser.add_argument('--device', type = str, default = 'cpu')    # To run on GPU, put cuda, and on CPU put cpu
 
     parser.add_argument('--save_path', type = str, default = prj_dir + 'Plots/')
     args = parser.parse_args()
