@@ -62,6 +62,8 @@ def get_step_function_logs(state_machine_arn, start_date=None, end_date=None):
                 if details:
                     print(f"  Details: {details}")
             print("-" * 80)
+            return event
+            break
 
     except stepfunctions_client.exceptions.ResourceNotFoundException:
         print(f"The state machine ARN {state_machine_arn} does not exist.")
@@ -74,7 +76,7 @@ if __name__ == "__main__":
     state_machine_arn = "arn:aws:states:us-east-1:211125778552:stateMachine:DataParallel-CosmicAI"
 
     # Optional: Define a time range (use timezone-aware UTC datetimes)
-    start_date = datetime(2024, 11, 17, 0, 0, 0, tzinfo=pytz.utc)  # Example: Start from this date
-    end_date = datetime(2024, 11, 17, 23, 0, 0, tzinfo=pytz.utc)    # Example: Until this date
+    start_date = datetime(2024, 11, 19, 0, 0, 0, tzinfo=pytz.utc)  # Example: Start from this date
+    end_date = datetime(2024, 11, 19, 23, 0, 0, tzinfo=pytz.utc)    # Example: Until this date
 
     get_step_function_logs(state_machine_arn, start_date, end_date)

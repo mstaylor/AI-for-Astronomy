@@ -26,7 +26,7 @@ A brief description of the workflow:
 
 The whole data needs to be split into smaller chunks so that we can run parallel executions on them.
 
-1. Get the total dataset. @Amir can share the raw file.
+1. Get the total dataset fro [Google drive](https://drive.google.com/drive/folders/18vX8-6LcGOmRyTbkJwMDOgQY15nGWves?usp=sharing).
 2. Split into smaller chunks (e.g. 10MB) using the [split_data.py](./aws/split_data.py).
 3. Now upload those file partitions into a S3 bucket.
 

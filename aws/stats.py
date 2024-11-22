@@ -80,9 +80,7 @@ def average_varying_data_size(data_sizes, runs):
     for partition in partitions:
         for data_size in data_sizes:
             for run in range(1, runs+1):
-                combined_file = f'./result-partition-{partition}MB/{data_size}/run {run}/combined_data.json'
-                if not os.path.exists(combined_file):
-                    combined_file = f'./result-partition-{partition}MB/{data_size}/{run}/combined_data.json'
+                combined_file = f'./result-partition-{partition}MB/{data_size}/{run}/combined_data.json'
                 
                 if not os.path.exists(combined_file):
                     print(f'File not found: {combined_file}')
@@ -97,31 +95,50 @@ def average_varying_data_size(data_sizes, runs):
                             results[key].append(d[key])
                     
                     results = pd.DataFrame(results)
-                    results['partition(MB)'] = partition
+                    results['partition (MB)'] = partition
                     results['run'] = run
                     
                     if data_size == 'total':
-                        results['data(GB)'] = 12.6
-                    else: results['data(GB)'] = float(data_size.replace('GB', ''))
+                        results['data (GB)'] = 12.6
+                    else: results['data (GB)'] = float(data_size.replace('GB', ''))
                     
                     all_results.append(results)
                 
     all_results = pd.concat(all_results)
     # all_results = all_results[['data_size', 'run'] + keys]
-    all_results = all_results.groupby(['partition(MB)','data(GB)', 'run'])[keys].agg({
+    all_results = all_results.groupby(['partition (MB)','data (GB)', 'run'])[keys].agg({
         'total_cpu_time (seconds)': remove_outliers_and_mean, 
         "total_cpu_memory (MB)": 'sum', 
         "throughput_bps": 'sum'
     }).reset_index()
 
-    mean = all_results.groupby(['partition(MB)','data(GB)'])[keys].mean().reset_index()
+    mean = all_results.groupby(['partition (MB)','data (GB)'])[keys].mean().reset_index()
     mean.insert(2, 'run', 'mean')
     all_results = pd.concat([all_results, mean], axis=0)
-    all_results.sort_values(['partition(MB)', 'data(GB)', 'run'], inplace=True)
+    all_results.sort_values(['partition (MB)', 'data (GB)', 'run'], inplace=True)
 
     filename = './results/result_stats.csv'
     all_results.round(2).to_csv(filename, index=False)
     print(f'File saved at {filename}')
+    
+def adjust_throughput():
+    result_stats = pd.read_csv('./results/result_stats.csv')
+    state_logs = pd.read_csv('./results/state_machine_logs.csv')
+    state_logs['run'] = state_logs['run'].astype(str)
+    
+    df = result_stats.merge(state_logs, on=['partition (MB)', 'data (GB)', 'run'])
+    
+    df['throughput_bps'] = df['throughput_bps'] * df['total_cpu_time (seconds)'] / df['inference_duration (s)']
+    avg = df.groupby(['partition (MB)', 'data (GB)'])[[
+        'total_cpu_time (seconds)', 'total_cpu_memory (MB)',
+        'throughput_bps', 'num_worlds','total_duration (s)',
+        'inference_duration (s)'
+    ]].mean().reset_index()
+    
+    avg.insert(2, 'run', 'mean')
+    df = pd.concat([df, avg], axis=0)
+    df.sort_values(by=['partition (MB)', 'data (GB)', 'run'], inplace=True)
+    df.round(2).to_csv('./results/result_stats_adjusted.csv', index=False)
 
 if __name__ == '__main__':
     partitions = [25, 50, 75, 100] # in MB
@@ -129,5 +146,6 @@ if __name__ == '__main__':
     runs = 3
     batch_sizes = [32, 64, 128, 256, 512]
     
-    average_varying_batch_size(batch_sizes, runs)
+    # average_varying_batch_size(batch_sizes, runs)
     # average_varying_data_size(data_sizes, runs)
+    # adjust_throughput()
