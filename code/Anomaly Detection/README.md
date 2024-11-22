@@ -91,10 +91,6 @@ You have two options to get the code:
    ...\AI-for-Astronomy-main\AI-for-Astronomy-main\code\Anomaly Detection\Inference
    ```
 2. Locate the `inference.py` file in this directory.
-3. Open `inference.py` and update the directory paths in the following lines:
-   - **Line 3**: Update the path to point to the "Anomaly Detection" folder.
-   - **Line 100**: Update the path as needed for your system.
-   - **Line 103**: Update the path to point to the `resized_inference.pt` dataset.
 
 ## Step 4: Run the Inference Script
 
