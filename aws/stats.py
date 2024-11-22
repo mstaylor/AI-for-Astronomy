@@ -37,7 +37,7 @@ def average_varying_batch_size(batch_sizes, runs):
 
     for batch_size in batch_sizes:
         for run in range(1, runs+1):
-            combined_file = f'./result-partition-100MB/{data_size}/Batches/{batch_size}/run {run}/combined_data.json'
+            combined_file = f'./result-partition-25MB/{data_size}/Batches/{batch_size}/{run}/combined_data.json'
             with open(combined_file, 'r') as f:
                 data = json.load(f)
                 
@@ -55,11 +55,15 @@ def average_varying_batch_size(batch_sizes, runs):
                 all_results.append(results)
                 
     all_results = pd.concat(all_results)
+    all_results['total_bits'] = all_results['throughput_bps'] * all_results['total_cpu_time (seconds)']
+    keys.append('total_bits')
+    
     # all_results = all_results[['data_size', 'run'] + keys]
     all_results = all_results.groupby([column_name, 'run'])[keys].agg({
         'total_cpu_time (seconds)': remove_outliers_and_mean, 
         "total_cpu_memory (MB)": 'sum', 
-        "throughput_bps": 'sum'
+        "throughput_bps": 'sum',
+        'total_bits': 'sum'
     }).reset_index()
     
     mean = all_results.groupby(column_name)[keys].mean().reset_index()
@@ -105,11 +109,15 @@ def average_varying_data_size(data_sizes, runs):
                     all_results.append(results)
                 
     all_results = pd.concat(all_results)
+    all_results['total_bits'] = all_results['throughput_bps'] * all_results['total_cpu_time (seconds)']
+    keys.append('total_bits')
+    
     # all_results = all_results[['data_size', 'run'] + keys]
     all_results = all_results.groupby(['partition (MB)','data (GB)', 'run'])[keys].agg({
         'total_cpu_time (seconds)': remove_outliers_and_mean, 
         "total_cpu_memory (MB)": 'sum', 
-        "throughput_bps": 'sum'
+        "throughput_bps": 'sum',
+        'total_bits': 'sum'
     }).reset_index()
 
     mean = all_results.groupby(['partition (MB)','data (GB)'])[keys].mean().reset_index()
@@ -121,24 +129,49 @@ def average_varying_data_size(data_sizes, runs):
     all_results.round(2).to_csv(filename, index=False)
     print(f'File saved at {filename}')
     
-def adjust_throughput():
+def adjust_throughput_stats():
     result_stats = pd.read_csv('./results/result_stats.csv')
     state_logs = pd.read_csv('./results/state_machine_logs.csv')
     state_logs['run'] = state_logs['run'].astype(str)
     
+    state_logs = state_logs[(~state_logs['batch_varying']) & (state_logs['batch_size'] == 512)]
+    state_logs.drop(columns=['batch_varying', 'batch_size'], inplace=True)
+    
     df = result_stats.merge(state_logs, on=['partition (MB)', 'data (GB)', 'run'])
     
-    df['throughput_bps'] = df['throughput_bps'] * df['total_cpu_time (seconds)'] / df['inference_duration (s)']
+    df['throughput_bps'] = df['total_bits'] / df['inference_duration (s)']
     avg = df.groupby(['partition (MB)', 'data (GB)'])[[
         'total_cpu_time (seconds)', 'total_cpu_memory (MB)',
         'throughput_bps', 'num_worlds','total_duration (s)',
-        'inference_duration (s)'
+        'inference_duration (s)', 'total_bits'
     ]].mean().reset_index()
     
     avg.insert(2, 'run', 'mean')
     df = pd.concat([df, avg], axis=0)
     df.sort_values(by=['partition (MB)', 'data (GB)', 'run'], inplace=True)
     df.round(2).to_csv('./results/result_stats_adjusted.csv', index=False)
+    
+def adjust_throughput_batch_varying():
+    result_stats = pd.read_csv('./results/batch_varying_results.csv')
+    state_logs = pd.read_csv('./results/state_machine_logs.csv')
+    state_logs['run'] = state_logs['run'].astype(str)
+    
+    state_logs = state_logs[state_logs['batch_varying']& (state_logs['data (GB)'] == 1)]
+    state_logs.drop(columns=['batch_varying', 'partition (MB)', 'data (GB)'], inplace=True)
+    
+    df = result_stats.merge(state_logs, on=['batch_size', 'run'])
+    
+    df['throughput_bps'] = df['total_bits'] / df['inference_duration (s)']
+    avg = df.groupby('batch_size')[[
+        'total_cpu_time (seconds)', 'total_cpu_memory (MB)',
+        'throughput_bps', 'num_worlds','total_duration (s)',
+        'inference_duration (s)', 'total_bits'
+    ]].mean().reset_index()
+    
+    avg.insert(1, 'run', 'mean')
+    df = pd.concat([df, avg], axis=0)
+    df.sort_values(by=['batch_size', 'run'], inplace=True)
+    df.round(2).to_csv('./results/batch_varying_adjusted.csv', index=False)
 
 if __name__ == '__main__':
     partitions = [25, 50, 75, 100] # in MB
@@ -146,6 +179,9 @@ if __name__ == '__main__':
     runs = 3
     batch_sizes = [32, 64, 128, 256, 512]
     
-    # average_varying_batch_size(batch_sizes, runs)
-    # average_varying_data_size(data_sizes, runs)
-    # adjust_throughput()
+    average_varying_batch_size(batch_sizes, runs)
+    adjust_throughput_batch_varying()
+    
+    average_varying_data_size(data_sizes, runs)
+    adjust_throughput_stats()
+    
