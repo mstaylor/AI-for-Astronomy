@@ -131,14 +131,14 @@ Please check the [result_stats.csv](./aws/results/result_stats.csv) for the aver
 
 #### Fig 2: Dataset size vs Inference time for each partition
 
-<img src='./aws/figures/inference_time.jpg' width='70%'/>
+<img src='./aws/figures/cai_inference_time.jpg' width='70%'/>
 </div>
 
 <div align="center" style="overflow-x:auto;">
 
 #### Fig 3: Data size vs Throughput for each partition
 
-<img src='./aws/figures/throughput.jpg' width='70%'/>
+<img src='./aws/figures/cai_throughput.jpg' width='70%'/>
 </div>
 
 ### Varying batch size
