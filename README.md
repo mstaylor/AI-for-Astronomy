@@ -125,7 +125,7 @@ Create a state machine that contains the following Lambda functions.
 
 The total data size is 12.6GB. We run the inference for different sizes to evaluate the scaling performance with increasing data load. This experiment runs with size 1GB, 2GB, 4GB, 6GB, 8GB, 10GB and 12.6GB. Batch size 512.
 
-Please check the [result_stats.csv](./aws/results/result_stats.csv) for the average results.
+Please check the [result_stats_adjusted.csv](./aws/results/result_stats_adjusted.csv) for the average results.
 
 <div align="center" style="overflow-x:auto;">
 
@@ -143,7 +143,7 @@ Please check the [result_stats.csv](./aws/results/result_stats.csv) for the aver
 
 ### Varying batch size
 
-We use the 1GB data and change batch size by [32, 64, 128, 256, 512]. The results are in [batch_varying_results.csv](./aws/results/batch_varying_results.csv).
+We use the 1GB data and change batch size by [32, 64, 128, 256, 512]. The results are in [batch_varying_adjusted.csv](./aws/results/batch_varying_adjusted.csv).
 
 <div align="center" style="overflow-x:auto;">
 
