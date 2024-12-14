@@ -1,3 +1,5 @@
+<img width="820" alt="image" src="https://github.com/user-attachments/assets/36c6591b-0877-4142-b238-a2a0e971aef8">
+
 # Cloud-based Astronomy Inference (CAI)
 
 This proposes a novel **Cloud-based Astronomy Inference (CAI)** framework for data parallel AI model inference on AWS. We can classify 500K astronomy images using the AstroMAE model in a minute ! 
