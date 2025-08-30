@@ -1,106 +1,355 @@
-import sys, argparse, json
-from torch.profiler import profile, record_function, ProfilerActivity
-# sys.path.append('/scratch/aww9gh/Cosmic_Cloud/AI-for-Astronomy/code/Anomaly Detection/') #adjust based on your system's directory
-sys.path.append('..') #adjust based on your system's directory
-import torch, time, os 
-import numpy as np
-import Plot_Redshift as plt_rdshft
+import sys, argparse
+
+sys.path.append('/tmp/Anomaly Detection/')  # adjust based on your system's directory
+import torch
 from torch.utils.data import DataLoader
-from blocks.model_vit_inception import ViT_Astro 
+from torch.utils.data import TensorDataset
+import boto3
+from botocore.exceptions import ClientError
+import logging
+import os, gc
+from torch.profiler import profile, ProfilerActivity
+import json, platform, boto3, io
+import numpy as np
+import psutil
 
-#Load Data
+s3_client = boto3.client('s3')
+dynamodb = boto3.resource('dynamodb')
+
+
+def get_cpu_info():
+    # CPU Information
+    print("CPU Information:")
+    print(f"Processor: {platform.processor()}")
+    print(f"Architecture: {platform.architecture()}")
+    print(f"Machine type: {platform.machine()}")
+    print(f"System: {platform.system()}")
+    print(f"Platform: {platform.platform()}")
+
+    return {
+        'processor': platform.processor(),
+        'architecture': platform.architecture(),
+        'machine': platform.machine(),
+        'system': platform.system(),
+        'platform': platform.platform()
+    }
+
+
+# RAM Information
+def get_ram_info():
+    if hasattr(os, 'sysconf'):
+        if 'SC_PAGE_SIZE' in os.sysconf_names and 'SC_PHYS_PAGES' in os.sysconf_names:
+            page_size = os.sysconf('SC_PAGE_SIZE')  # in bytes
+            total_pages = os.sysconf('SC_PHYS_PAGES')
+            total_ram = page_size * total_pages  # in bytes
+            total_ram_gb = total_ram / (1024 ** 3)  # convert to GB
+            print(f"Total memory (GB): {total_ram_gb:.2f}")
+            return total_ram_gb
+    return None
+
+
+def upload_file(file_name, bucket, object_name=None):
+    """Upload a file to an S3 bucket
+
+    :param file_name: File to upload
+    :param bucket: Bucket to upload to
+    :param object_name: S3 object name. If not specified then file_name is used
+    :return: True if file was uploaded, else False
+    """
+
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = os.path.basename(file_name)
+
+    # Upload the file
+
+    try:
+        response = s3_client.upload_file(file_name, bucket, object_name)
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
+
+
+def environ_or_required(key, default=None, required=True):
+    if default is None:
+        return (
+            {'default': os.environ.get(key)} if os.environ.get(key)
+            else {'required': required}
+
+        )
+    else:
+        return (
+            {'default': os.environ.get(key)} if os.environ.get(key)
+            else {'default': default}
+
+        )
+
+
+def get_body_from_dynamodb(body_key, dynamodb_table):
+    """Retrieve body content from DynamoDB using the provided key
+    
+    :param body_key: String key to lookup in DynamoDB
+    :param dynamodb_table: Name of the DynamoDB table
+    :return: Body content from the 'result' field
+    """
+    try:
+        table = dynamodb.Table(dynamodb_table)
+        response = table.get_item(Key={'id': body_key})
+        
+        if 'Item' not in response:
+            logging.error(f'No item found in DynamoDB for key: {body_key}')
+            sys.exit(1)
+            
+        item = response['Item']
+        return item['result']
+        
+    except Exception as e:
+        logging.error(f'Error retrieving data from DynamoDB: {str(e)}')
+        sys.exit(1)
+
+
+# Load Data
 def load_data(data_path, device):
-    return torch.load(data_path, map_location = device)
+    return torch.load(data_path, map_location=device)
 
-#Load Model
+
+# Load Model
 def load_model(model_path, device):
-    model = torch.load(model_path, map_location = device)
+    model = torch.load(model_path, map_location=device, weights_only=False)
     return model.module.eval()
 
-#Use DataLoader for iterating over batches
+
+# Use DataLoader for iterating over batches
 def data_loader(data, batch_size):
-    return DataLoader(data, batch_size = batch_size, drop_last = False)   #Drop samples out of the batch size
+    return DataLoader(data, batch_size=batch_size)
+
+def get_process_memory_mb():
+    process = psutil.Process(os.getpid())
+    return process.memory_info().rss / 1024 / 1024
+
+def get_model_memory_mb(model):
+    total_params = sum(p.numel() for p in model.parameters())
+    param_bytes = total_params * 4  # assuming float32
+    return param_bytes / 1024 / 1024
+
+def get_tensor_memory_mb(tensor):
+    return tensor.element_size() * tensor.nelement() / 1024 / 1024
 
 
-# Define the inference function with profiling for both CPU and GPU memory usage
-def inference(model, dataloader, real_redshift, save_path, device, batch_size):
-    redshift_analysis = []
+# Iterate over data for predicting the redshift and invoke the evaluation modules
+def inference(
+        model, dataloader, device, batch_size,
+        rank, result_path, data_path, args
+):
     total_time = 0.0  # Initialize total time for execution
-    num_batches = 0   # Initialize number of batches
+    num_batches = 0  # Initialize number of batches
     total_data_bits = 0  # Initialize total data bits processed
+    logging.info(f'Rank: {rank}. Start Inference')
+    num_samples = 0
 
-    # Initialize the profiler to track both CPU and GPU activities and memory usage
-    with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                 profile_memory=True,
-                 record_shapes=True) as prof:
+    # --- Initial memory before loading model/data
+    mem_before = get_process_memory_mb()
 
-        for i, data in enumerate(dataloader):
-            with torch.no_grad():
-                image = data[0].to(device)  # Image to device
-                magnitude = data[1].to(device)  # Magnitude to device
+    # --- Memory used by model
+    model_memory = get_model_memory_mb(model)
+    mem_after_model = get_process_memory_mb()
 
-                with record_function("model_inference"):
-                    predict_redshift = model([image, magnitude])  # Model inference
+    with profile(
+            activities=[ProfilerActivity.CPU],
+            profile_memory=True
+    ) as prof:
+        with torch.no_grad():
+            for i, data in enumerate(dataloader):
+                image = data[0].to(device)  # Image is permuted, cropped and moved to cuda
+                magnitude = data[1].to(device)  # magnitude of of channels
 
-                # Append the redshift prediction to analysis list
-                redshift_analysis.append(predict_redshift.view(-1, 1))
-                num_batches += 1
-                
-                # Calculate data size for this batch
+                if i == 0:
+                    image_memory = get_tensor_memory_mb(image)
+                    magnitude_memory = get_tensor_memory_mb(magnitude)
+
+                _ = model([image, magnitude])  # Model inference
+
+                # Calculate the size of the image and magnitude data in bits
                 image_bits = image.element_size() * image.nelement() * 8  # Convert bytes to bits
                 magnitude_bits = magnitude.element_size() * magnitude.nelement() * 8  # Convert bytes to bits
                 total_data_bits += image_bits + magnitude_bits  # Add data bits for this batch
 
-    num_samples = len(real_redshift)
-    redshift_analysis = torch.cat(redshift_analysis, dim=0)
-    redshift_analysis = redshift_analysis.cpu().detach().numpy().reshape(num_samples,) 
-    
+                num_batches += 1
+                num_samples += len(image)
+                gc.collect()
+
+    # num_samples = num_batches * batch_size
+
+    avg = prof.key_averages().total_average()
     # Extract total time and memory usage for CPU and GPU
-    total_cpu_memory = prof.key_averages().total_average().cpu_memory_usage / 1e6  # Convert bytes to MB
-    total_gpu_memory = prof.key_averages().total_average().cuda_memory_usage / 1e6  # Convert bytes to MB
+    total_cpu_memory = avg.cpu_memory_usage / 1e6  # Convert bytes to MB
+    # total_gpu_memory = prof.key_averages().total_average().cuda_memory_usage / 1e6  # Convert bytes to MB
 
     # Extract total CPU and GPU time
-    total_cpu_time = prof.key_averages().total_average().cpu_time_total / 1e6  # Convert from microseconds to seconds
-    total_gpu_time = prof.key_averages().total_average().cuda_time_total / 1e6  # Convert from microseconds to seconds
+    total_time = avg.cpu_time_total / 1e6  # Convert from microseconds to seconds
+    # total_gpu_time = prof.key_averages().total_average().cuda_time_total / 1e6  # Convert from microseconds to milliseconds
+    avg_time_batch = total_time / (num_samples / batch_size)
 
-    
-    total_time = max(total_cpu_time, total_gpu_time)
-  
-    avg_time_batch = total_time / num_batches
-    
+    mem_after_inference = get_process_memory_mb()
+
+    logging.info(f'Rank: {rank}. End Inference. Total time: {total_time}. Avg time per batch: {avg_time_batch}.')
+
+    # --- Memory breakdown
+    image_total = image_memory + magnitude_memory
+    total_process_mem = mem_after_inference
+    library_overhead = total_process_mem - (model_memory + image_total)
+
     execution_info = {
-            'total_cpu_time': total_cpu_time,
-            'total_gpu_time': total_gpu_time,
-            'total_cpu_memory': total_cpu_memory, 
-            'total_gpu_memory': total_gpu_memory,
-            'execution_time_per_batch': avg_time_batch,   # Average execution time per batch
-            'num_batches': num_batches,   # Number of batches
-            'batch_size': batch_size,   # Batch size
-            'device': device,   # Selected device
-            'throughput_bps': total_data_bits / total_time,   # Throughput in bits per second (using total_time for all batches)
-        }
-    # Invoke the evaluation metrics
-    plt_rdshft.err_calculate(redshift_analysis, real_redshift, execution_info, save_path)  
-    plt_rdshft.plot_density(redshift_analysis, real_redshift, save_path)
-    
+        'total_cpu_time (seconds)': total_time,
+        'total_cpu_memory (MB)': total_cpu_memory,
+        'total_process_memory (MB)': total_process_mem,
+        'library_overhead_memory (MB)': library_overhead,
+        'total_image_memory (MB)': image_total,
+        'total_model_memory (MB)': model_memory,
+        'execution_time (seconds/batch)': avg_time_batch,  # Average execution time per batch
+        'num_batches': num_batches,  # Number of batches
+        'batch_size': batch_size,  # Batch size
+        'device': device,  # Selected device
+        'throughput_bps': total_data_bits / total_time,
+        # Throughput in bits per second (using total_time for all batches)
+        'sample_persec': num_samples / total_time,  # Number of samples processed per second
+        'result_path': result_path,
+        'data_path': data_path
+    }
 
-#This is the engine module for invoking and calling various modules
+    s3_client.put_object(
+        Bucket=args.data_bucket,
+        Key=f'{result_path}/{rank}.json',
+        Body=json.dumps(execution_info),
+        ContentType="application/json"
+    )
+
+    # with open('Results.json', 'w') as json_file:
+    #     json.dump(execution_info, json_file, indent=4)
+
+    # upload_file(
+    #     file_name=f'{prj_dir}Plots/Results.json',
+    #     bucket='cosmicai2',
+    #     object_name=f'{result_path}/{rank}.json'
+    # )
+
+
+def concatenate_data(data_list):
+    images = []
+    magnitudes = []
+    redshifts = []
+
+    for chunk in data_list:
+        # Split image, magnitude, and redshift from each chunk
+        images.append(chunk[:][0])
+        magnitudes.append(chunk[:][1])
+        redshifts.append(chunk[:][2])
+
+    # Concatenate image, magnitude and redshift in separate tensors
+    images = torch.cat(images)
+    magnitudes = torch.cat(magnitudes)
+    redshifts = torch.cat(redshifts)
+
+    # Store them as a dataset in save_cat_path
+    return TensorDataset(images, magnitudes, redshifts)
+
+
+def load_data(data_path, bucket):
+    if type(data_path) == list:
+        data_list = [load_data(data_path=path, bucket=bucket) for path in data_path]
+        return concatenate_data(data_list)
+
+    # Create a BytesIO buffer to hold the downloaded file
+    buffer = io.BytesIO()
+    # Download the .pt file from S3 to the buffer
+    s3_client.download_fileobj(Bucket=bucket, Key=data_path, Fileobj=buffer)
+    # Move to the beginning of the buffer to read
+    buffer.seek(0)
+    data = torch.load(buffer, weights_only=False)  # load_data(args.data_path, args.device)
+    return data
+
+
+def partition_data(data, rank, world_size):
+    image, magnitude, redshift = data[:][0], data[:][1], data[:][2]
+    total = len(data)
+    rank, world_size = args.rank, args.world_size
+
+    start = rank * total // world_size
+    if rank == world_size - 1:
+        end = total
+    else:
+        end = (rank + 1) * total // world_size  # int(splits[rank])
+
+    logging.info(f'Rank: {rank}, Start: {start}, End: {end}')
+    image = image[start:end]
+    magnitude = magnitude[start:end]
+    redshift = redshift[start:end]
+    data = TensorDataset(image, magnitude, redshift)
+
+    return data
+
+
+# This is the engine module for invoking and calling various modules
 def engine(args):
-    data = load_data(args.data_path, args.device)
-    dataloader = data_loader(data, args.batch_size)
-    model = load_model(args.model_path, args.device)
-    inference(model, dataloader, data[:][2].to('cpu'), args.save_path, device = args.device, batch_size = args.batch_size)
+    data = load_data(
+        data_path=args.data_path, bucket=args.data_bucket
+    )
 
-    
+    dataloader = DataLoader(
+        data, batch_size=args.batch_size  # , drop_last=True
+    )  # data_loader(data, args.batch_size)
+    model = load_model(args.model_path, args.device)
+
+    inference(
+        model, dataloader,
+        device=args.device, batch_size=args.batch_size,
+        rank=args.rank, result_path=args.result_path,
+        data_path=args.data_path, args=args
+    )
+
+
 # Pathes and other inference hyperparameters can be adjusted below
 if __name__ == '__main__':
-    prj_dir = '../' #adjust based on your system's directory
+    prj_dir = '/tmp/Anomaly Detection/'  # adjust based on your system's directory
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default=512)
-    parser.add_argument('--data_path', type = str, default = 'resized_inference.pt')
-    parser.add_argument('--model_path', type = str, default  = prj_dir + 'Fine_Tune_Model/Mixed_Inception_z_VITAE_Base_Img_Full_New_Full.pt')
-    parser.add_argument('--device', type = str, default = 'cpu')    # To run on GPU, put cuda, and on CPU put cpu
+    # parser.add_argument(
+    #     '--batch_size', type=int, default=512
+    # )
+    # parser.add_argument(
+    #     '--data_path', type=str,
+    #     **environ_or_required(
+    #         'DATA_PATH', required=False,
+    #         default=f'{prj_dir}Inference/resized_inference.pt'
+    #     )
+    # )
 
-    parser.add_argument('--save_path', type = str, default = prj_dir + 'Plots/')
+    parser.add_argument(
+        '--model_path', type=str,
+        default=f'{prj_dir}Fine_Tune_Model/Mixed_Inception_z_VITAE_Base_Img_Full_New_Full.pt',
+    )
+    parser.add_argument('--device', type=str, default='cpu')  # To run on GPU, put cuda, and on CPU put cpu
+
+    parser.add_argument('--plot_path', type=str, default=f'{prj_dir}Plots/')
+    # parser.add_argument('--result_path', type=str, **environ_or_required('RESULT_PATH', required=False))
+
+    parser.add_argument('--rank', type=int, **environ_or_required('RANK', required=False))
+    parser.add_argument('--world_size', type=int, **environ_or_required('WORLD_SIZE', required=False))
+    parser.add_argument('--body_key', type=str, **environ_or_required('BODY_KEY', required=False))
+    parser.add_argument('--dynamodb_table', type=str, **environ_or_required('DYNAMODB_TABLE', required=False))
     args = parser.parse_args()
+
+    # Get configuration from DynamoDB
+    body_content = get_body_from_dynamodb(args.body_key, args.dynamodb_table)
+    config = json.loads(body_content)
+
+    args.batch_size = int(config['batch_size'])
+    args.data_bucket = config['data_bucket']
+    args.data_path = config['data_map'][str(args.rank)]  # f'{args.rank+1}.pt'
+    args.result_path = config['result_path']
+
+    if args.data_path is None:
+        logging.info(f'Rank: {args.rank}. Data path is not specified. Exiting.')
+        sys.exit(0)
+
     engine(args)
