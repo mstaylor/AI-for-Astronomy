@@ -184,3 +184,14 @@ Estimated AWS computation cost summary for inference on the total dataset. Cost 
 The number of requests is how many times the Lambda function was called, which is the number of concurrent jobs (data divided by partition size). The maximum memory size can be configured based on memory usage (smaller partitions use less memory). Other costs, for example, request charge ($2e-7/request), and storage charge ($3.09e-8/GB-s if > 512MB) are negligible.
 
 </details>
+
+
+## Extented Results
+We extend the inference scaling beyond the 12.6GB limit using an Infinite dataloader, repeatedly sampling from the data distribution to scale at large sizes. We perform this on Rivanna CPU server.
+
+<div align="center" style="overflow-x:auto;">
+
+#### Fig 6: Data size vs Inference Time at Large Scale (till 1TB) using CPU.
+
+<img src='./code/Anomaly Detection/Inference/outputs/cpu.jpg' width='70%' style="{align:center}"/>
+</div>
