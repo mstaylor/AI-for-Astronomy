@@ -138,28 +138,22 @@ def lambda_handler(event, context):
         ContentType="application/json"
     )
 
-    # Generate unique key for DynamoDB storage
+    # Generate unique key for S3 storage
     body_key = str(uuid.uuid4())
+    result_s3_key = f'temp-results/{body_key}.json'
     
-    # Store result in DynamoDB table with 15-minute TTL
-    table_name = event['dynamodb_table']
-    table = dynamodb.Table(table_name)
-    
-    # TTL expiration time: current time + 15 minutes (900 seconds)
-    ttl_expiration = int(time.time()) + 900
-    
-    table.put_item(
-        Item={
-            'id': body_key,
-            'result': result,
-            'timestamp': int(time.time()),
-            'ttl': ttl_expiration
-        }
+    # Store result in S3
+    s3_client.put_object(
+        Bucket=bucket,
+        Key=result_s3_key,
+        Body=json.dumps(result, indent=4),
+        ContentType="application/json"
     )
 
     return {
         'statusCode': 404 if filenames is None else 200,
-        'BODY_KEY': body_key,
-        'DYNAMODB_TABLE': table_name,
-
+        'body': {
+            'S3_BUCKET': bucket,
+            'S3_KEY': result_s3_key
+        }
     }

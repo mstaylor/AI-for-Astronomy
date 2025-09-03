@@ -14,7 +14,6 @@ import numpy as np
 import psutil
 
 s3_client = boto3.client('s3')
-dynamodb = boto3.resource('dynamodb')
 
 
 def get_cpu_info():
@@ -84,29 +83,6 @@ def environ_or_required(key, default=None, required=True):
             else {'default': default}
 
         )
-
-
-def get_body_from_dynamodb(body_key, dynamodb_table):
-    """Retrieve body content from DynamoDB using the provided key
-    
-    :param body_key: String key to lookup in DynamoDB
-    :param dynamodb_table: Name of the DynamoDB table
-    :return: Body content from the 'result' field
-    """
-    try:
-        table = dynamodb.Table(dynamodb_table)
-        response = table.get_item(Key={'id': body_key})
-        
-        if 'Item' not in response:
-            logging.error(f'No item found in DynamoDB for key: {body_key}')
-            sys.exit(1)
-            
-        item = response['Item']
-        return item['result']
-        
-    except Exception as e:
-        logging.error(f'Error retrieving data from DynamoDB: {str(e)}')
-        sys.exit(1)
 
 
 # Load Data
@@ -335,13 +311,13 @@ if __name__ == '__main__':
 
     parser.add_argument('--rank', type=int, **environ_or_required('RANK', required=False))
     parser.add_argument('--world_size', type=int, **environ_or_required('WORLD_SIZE', required=False))
-    parser.add_argument('--body_key', type=str, **environ_or_required('BODY_KEY', required=False))
-    parser.add_argument('--dynamodb_table', type=str, **environ_or_required('DYNAMODB_TABLE', required=False))
     args = parser.parse_args()
 
-    # Get configuration from DynamoDB
-    body_content = get_body_from_dynamodb(args.body_key, args.dynamodb_table)
-    config = json.loads(body_content)
+    # TODO: get it from state-input
+    # get the result path
+    obj = s3_client.get_object(Bucket='cosmicai-data-cylon', Key='payload.json')
+    file_content = obj["Body"].read().decode("utf-8")
+    config = json.loads(file_content)
 
     args.batch_size = int(config['batch_size'])
     args.data_bucket = config['data_bucket']

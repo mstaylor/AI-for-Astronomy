@@ -6,7 +6,16 @@ def lambda_handler(event, context):
     # prefix = "results" # replace with your folder path within the bucket if needed
 
     s3_client = boto3.client('s3')
-    prefix = event['body'][0]['RESULT_PATH']
+    
+    # Get the payload data from S3
+    payload_bucket = event['body']['S3_BUCKET']
+    payload_key = event['body']['S3_KEY']
+    
+    # Read the payload data to get RESULT_PATH
+    obj = s3_client.get_object(Bucket=payload_bucket, Key=payload_key)
+    payload_data = json.loads(obj["Body"].read().decode("utf-8"))
+    
+    prefix = payload_data[0]['RESULT_PATH']
 
     logging.info(f'Combined result will be saved in {prefix}')
 
