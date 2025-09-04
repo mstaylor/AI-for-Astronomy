@@ -8,3 +8,6 @@ aws/**/[0-9]*.json
 
 # Allow other JSON files in the 'aws' folder and its subfolders
 !aws/**/*[!0-9]*.json
+
+code/Anomaly Detection/Inference/cpu/[0-9]*.json
+code/Anomaly Detection/Inference/cuda/[0-9]*.json
